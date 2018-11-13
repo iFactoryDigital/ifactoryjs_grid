@@ -472,16 +472,28 @@
       }, eden.router.history.location.state);
 
       // set url
-      window.eden.router.history.replace({
-        'pathname' : eden.router.history.location.pathname.split('?')[0] + '?' + jQuery.param({
+      if (!opts.onState) {
+        // replace state
+        window.eden.router.history.replace({
+          'pathname' : eden.router.history.location.pathname.split('?')[0] + '?' + jQuery.param({
+            'way'    : this.state.way,
+            'page'   : this.state.page,
+            'rows'   : this.state.rows,
+            'sort'   : this.state.sort,
+            'filter' : this.state.filter
+          }),
+          'state' : state,
+        });
+      } else {
+        // run on state
+        opts.onState({
           'way'    : this.state.way,
           'page'   : this.state.page,
           'rows'   : this.state.rows,
           'sort'   : this.state.sort,
           'filter' : this.state.filter
-        }),
-        'state' : state,
-      });
+        });
+      }
 
       // log data
       let res = await fetch(this.state.route, {
