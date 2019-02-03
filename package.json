@@ -1,7 +1,11 @@
 {
   "name": "@edenjs/grid",
-  "version": "1.0.3",
   "description": "",
+  "version": "1.0.3",
+  "dependencies": {},
+  "engines": {
+    "node": ">= 8.0.0"
+  },
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,5 +19,13 @@
   "bugs": {
     "url": "https://github.com/eden-js/grid/issues"
   },
-  "homepage": "https://github.com/eden-js/grid#readme"
+  "homepage": "https://github.com/eden-js/grid#readme",
+  "devDependencies": {
+    "eslint": "^5.13.0",
+    "@edenjs/eslint-config-eden": "^2.0.14",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-jsx-a11y": "^6.2.0",
+    "eslint-plugin-react": "^7.12.4"
+  }
 }
