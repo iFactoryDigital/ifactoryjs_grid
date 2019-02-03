@@ -5,29 +5,28 @@ const Helper = require('helper');
  * Create Grid Helper class
  */
 class GridHelper extends Helper {
-
   /**
    * Construct Grid Helper class
    *
    * @param {object} options
    */
-  constructor (options) {
+  constructor(options) {
     // Run super
     super();
 
     // Bind public methods
-    this.data      = this.data.bind(this);
-    this.type      = this.type.bind(this);
-    this.rows      = this.rows.bind(this);
-    this.live      = this.live.bind(this);
-    this.page      = this.page.bind(this);
-    this.post      = this.post.bind(this);
-    this.sort      = this.sort.bind(this);
-    this.model     = this.model.bind(this);
-    this.query     = this.query.bind(this);
-    this.route     = this.route.bind(this);
-    this.filter    = this.filter.bind(this);
-    this.render    = this.render.bind(this);
+    this.data = this.data.bind(this);
+    this.type = this.type.bind(this);
+    this.rows = this.rows.bind(this);
+    this.live = this.live.bind(this);
+    this.page = this.page.bind(this);
+    this.post = this.post.bind(this);
+    this.sort = this.sort.bind(this);
+    this.model = this.model.bind(this);
+    this.query = this.query.bind(this);
+    this.route = this.route.bind(this);
+    this.filter = this.filter.bind(this);
+    this.render = this.render.bind(this);
     this.querySort = this.querySort.bind(this);
 
     // Bind private methods
@@ -37,16 +36,16 @@ class GridHelper extends Helper {
     options = options || {};
 
     // Set private variables
-    this._way     = options.way     || false;
-    this._rows    = options.rows    || 20;
-    this._type    = options.type    || 'columns';
-    this._live    = options.live    || false;
-    this._page    = options.page    || 1;
-    this._sort    = options.sort    || false;
-    this._model   = options.model   || false;
-    this._where   = options.where   || this._model;
-    this._route   = options.route   || '';
-    this._filter  = options.filter  || {};
+    this._way = options.way || false;
+    this._rows = options.rows || 20;
+    this._type = options.type || 'columns';
+    this._live = options.live || false;
+    this._page = options.page || 1;
+    this._sort = options.sort || false;
+    this._model = options.model || false;
+    this._where = options.where || this._model;
+    this._route = options.route || '';
+    this._filter = options.filter || {};
     this._filters = options.filters || {};
     this._columns = options.columns || {};
 
@@ -61,7 +60,7 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  rows (rows) {
+  rows(rows) {
     // Set rows
     this._rows = rows;
 
@@ -76,7 +75,7 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  type (type) {
+  type(type) {
     // Set type
     this._type = type;
 
@@ -91,7 +90,7 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  live (live) {
+  live(live) {
     // Set live
     this._live = live;
 
@@ -106,7 +105,7 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  page (page) {
+  page(page) {
     // Set page
     this._page = page;
 
@@ -122,9 +121,9 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  sort (sort, way) {
+  sort(sort, way) {
     // Set way and sort
-    this._way  = way;
+    this._way = way;
     this._sort = sort;
 
     // Allow chainable
@@ -138,7 +137,7 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  model (model) {
+  model(model) {
     // Set model
     this._model = model;
 
@@ -156,7 +155,7 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  route (route) {
+  route(route) {
     // Set route
     this._route = route;
 
@@ -171,7 +170,7 @@ class GridHelper extends Helper {
    *
    * @async
    */
-  async query () {
+  async query() {
     // Check filters
     for (const filter in this._filter) {
       // Check this filter has filter
@@ -203,7 +202,7 @@ class GridHelper extends Helper {
    *
    * @async
    */
-  async querySort () {
+  async querySort() {
     // Check sort
     if (this._sort && this._columns[this._sort] && this._columns[this._sort].sort && this._way !== false) {
       // Check type
@@ -231,7 +230,7 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  filter (key, filter) {
+  filter(key, filter) {
     // Set filter
     this._filters[key] = filter;
 
@@ -247,7 +246,7 @@ class GridHelper extends Helper {
    *
    * @return {GridHelper}
    */
-  column (key, column) {
+  column(key, column) {
     // Set column
     this._columns[key] = column;
 
@@ -261,7 +260,7 @@ class GridHelper extends Helper {
    * @param {Request}  req
    * @param {Response} res
    */
-  async post (req, res) {
+  async post(req, res) {
     // Check updates
     if (req.body.updates) await this.updates(req.body.updates);
 
@@ -303,14 +302,14 @@ class GridHelper extends Helper {
    *
    * @return {Promise}
    */
-  async updates (updates) {
+  async updates(updates) {
     // Loop keys
-    for (let id in updates) {
+    for (const id in updates) {
       // Get id
-      let row = await this._model.findById(id);
+      const row = await this._model.findById(id);
 
       // Loop columns
-      for (let column in updates[id]) {
+      for (const column in updates[id]) {
         // Check columns
         if (!this._columns[column] || !this._columns[column].update) continue;
 
@@ -328,41 +327,40 @@ class GridHelper extends Helper {
    *
    * @return {Promise}
    */
-  data (rows, type) {
+  data(rows, type) {
     // Check type
     if (this._type !== 'columns') {
       // Return sanitised
       return Promise.all(rows.map((row) => {
         return row.sanitise();
       }));
-    } else {
-      // Return map
-      return Promise.all(rows.map(async (row) => {
-        // Set sanitised
-        const sanitised = {};
-
-        // Loop columns
-        await Promise.all(Object.keys(this._columns).map(async (column) => {
-          // Check if column export
-          if (typeof this._columns[column].type !== 'undefined' && type !== this._columns[column].type) return;
-
-          // Load column
-          let load = await row.get(column);
-
-          // Check format
-          if (this._columns[column].format) load = await this._columns[column].format(load, row, type);
-
-          // Set to sanitised
-          sanitised[column] = (load || '').toString();
-        }));
-
-        // Set id row
-        sanitised._id = row.get('_id').toString();
-
-        // Return sanitised
-        return sanitised;
-      }));
     }
+    // Return map
+    return Promise.all(rows.map(async (row) => {
+      // Set sanitised
+      const sanitised = {};
+
+      // Loop columns
+      await Promise.all(Object.keys(this._columns).map(async (column) => {
+        // Check if column export
+        if (typeof this._columns[column].type !== 'undefined' && type !== this._columns[column].type) return;
+
+        // Load column
+        let load = await row.get(column);
+
+        // Check format
+        if (this._columns[column].format) load = await this._columns[column].format(load, row, type);
+
+        // Set to sanitised
+        sanitised[column] = (load || '').toString();
+      }));
+
+      // Set id row
+      sanitised._id = row.get('_id').toString();
+
+      // Return sanitised
+      return sanitised;
+    }));
   }
 
   /**
@@ -375,7 +373,7 @@ class GridHelper extends Helper {
    *
    * @async
    */
-  async export (req, type) {
+  async export(req, type) {
     // Check order
     if (req.body.sort) this._sort = req.body.sort;
 
@@ -410,7 +408,7 @@ class GridHelper extends Helper {
    *
    * @async
    */
-  async render (req) {
+  async render(req) {
     // Check rows
     if (req && req.query.rows) this._rows = parseInt(req.query.rows);
 
@@ -440,19 +438,19 @@ class GridHelper extends Helper {
 
     // Set response
     const response = {
-      'data'    : [],
-      'filter'  : this._filter,
-      'filters' : [],
-      'columns' : []
+      data    : [],
+      filter  : this._filter,
+      filters : [],
+      columns : [],
     };
 
     // Set standard vars
-    response.way   = this._way;
-    response.page  = this._page;
-    response.rows  = this._rows;
-    response.sort  = this._sort;
-    response.live  = this._live;
-    response.type  = this._type;
+    response.way = this._way;
+    response.page = this._page;
+    response.rows = this._rows;
+    response.sort = this._sort;
+    response.live = this._live;
+    response.type = this._type;
     response.route = this._route;
 
     // Do query
@@ -465,7 +463,7 @@ class GridHelper extends Helper {
     await this.querySort();
 
     // Complete query
-    let rows = await this._where.skip(this._rows * (this._page - 1)).limit(this._rows).find();
+    const rows = await this._where.skip(this._rows * (this._page - 1)).limit(this._rows).find();
 
     // Get data
     response.data = await this.data(rows, false);
@@ -481,13 +479,13 @@ class GridHelper extends Helper {
 
           // Push into columns
           response.columns.push({
-            'id'     : col,
-            'sort'   : !!this._columns[col].sort,
-            'meta'   : this._columns[col].meta,
-            'width'  : this._columns[col].width || false,
-            'title'  : this._columns[col].title,
-            'input'  : this._columns[col].input,
-            'update' : !!this._columns[col].update
+            id     : col,
+            sort   : !!this._columns[col].sort,
+            meta   : this._columns[col].meta,
+            width  : this._columns[col].width || false,
+            title  : this._columns[col].title,
+            input  : this._columns[col].input,
+            update : !!this._columns[col].update,
           });
         }
       }
@@ -499,12 +497,12 @@ class GridHelper extends Helper {
       if (this._filters.hasOwnProperty(filter)) {
         // Push into filters
         response.filters.push({
-          'id'      : filter,
-          'type'    : this._filters[filter].type,
-          'ajax'    : this._filters[filter].ajax,
-          'title'   : this._filters[filter].title,
-          'socket'  : this._filters[filter].socket,
-          'options' : this._filters[filter].options
+          id      : filter,
+          type    : this._filters[filter].type,
+          ajax    : this._filters[filter].ajax,
+          title   : this._filters[filter].title,
+          socket  : this._filters[filter].socket,
+          options : this._filters[filter].options,
         });
       }
     }
@@ -516,7 +514,7 @@ class GridHelper extends Helper {
   /**
    * Binds model
    */
-  _bind () {
+  _bind() {
     // Check model
     if (!this._model) return;
 
