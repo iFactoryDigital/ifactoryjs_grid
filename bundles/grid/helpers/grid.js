@@ -36,6 +36,7 @@ class GridHelper extends Helper {
     options = options || {};
 
     // Set private variables
+    this._id = options.id || false;
     this._way = options.way || false;
     this._rows = options.rows || 20;
     this._type = options.type || 'columns';
@@ -51,6 +52,21 @@ class GridHelper extends Helper {
 
     // Run bind
     this._bind();
+  }
+
+  /**
+   * Set model
+   *
+   * @param  {*} id
+   *
+   * @return {GridHelper}
+   */
+  id(id) {
+    // Set model
+    this._id = id;
+
+    // Allow chainable
+    return this;
   }
 
   /**
@@ -149,6 +165,21 @@ class GridHelper extends Helper {
   }
 
   /**
+   * Set model
+   *
+   * @param  {*} form
+   *
+   * @return {GridHelper}
+   */
+  form(form) {
+    // Set model
+    this._form = form;
+
+    // Allow chainable
+    return this;
+  }
+
+  /**
    * Set route
    *
    * @param  {string} route
@@ -172,24 +203,21 @@ class GridHelper extends Helper {
    */
   async query() {
     // Check filters
-    for (const filter in this._filter) {
-      // Check this filter has filter
-      if (this._filter.hasOwnProperty(filter)) {
-        // Check filter exists
-        if (!this._filters[filter]) {
-          continue;
-        }
-
-        // Check if filter has query
-        if (this._filters[filter].query) {
-          // Run query
-          await this._filters[filter].query(this._filter[filter]);
-        } else {
-          // Run and
-          this.where(filter, this._filter[filter]);
-        }
+    await Promise.all(Object.keys(this._filter).map(async (filter) => {
+      // Check filter exists
+      if (!this._filters[filter]) {
+        return;
       }
-    }
+
+      // Check if filter has query
+      if (this._filters[filter].query) {
+        // Run query
+        await this._filters[filter].query(this._filter[filter]);
+      } else {
+        // Run and
+        this.where(filter, this._filter[filter]);
+      }
+    }));
 
     // Return this
     return this;
@@ -262,33 +290,44 @@ class GridHelper extends Helper {
    */
   async post(req, res) {
     // Check updates
-    if (req.body.updates) await this.updates(req.body.updates);
+    if (req.body.updates) {
+      // do updates
+      await this.updates(req.body.updates);
+    }
 
     // Check rows
-    if (req.body.rows) this._rows = parseInt(req.body.rows);
+    if (req.body.rows) {
+      // set rows
+      this._rows = parseInt(req.body.rows, 10);
+    }
 
     // Check page
-    if (req.body.page) this._page = parseInt(req.body.page);
+    if (req.body.page) {
+      // set page
+      this._page = parseInt(req.body.page, 10);
+    }
 
     // Check sort
-    if (req.body.sort) this._sort = req.body.sort;
+    if (req.body.sort) {
+      // set sort
+      this._sort = req.body.sort;
+    }
 
     // Set way
     this._way = req.body.way;
 
     // Check filter
     if (req.body.filter) {
-      // Loop filter
-      for (const key in req.body.filter) {
-        // Check filter has key
-        if (req.body.filter.hasOwnProperty(key)) {
-          // Check value
-          if (!req.body.filter[key].length && !Object.keys(req.body.filter[key]).length) continue;
-
-          // Set filter
-          this._filter[key] = req.body.filter[key];
+      // create filter
+      Object.keys(req.body.filter).forEach((key) => {
+        // Check value
+        if (!req.body.filter[key].length && !Object.keys(req.body.filter[key]).length) {
+          return;
         }
-      }
+
+        // Set filter
+        this._filter[key] = req.body.filter[key];
+      });
     }
 
     // Send result
@@ -304,19 +343,21 @@ class GridHelper extends Helper {
    */
   async updates(updates) {
     // Loop keys
-    for (const id in updates) {
+    await Promise.all(Object.keys(updates).map(async (id) => {
       // Get id
       const row = await this._model.findById(id);
 
       // Loop columns
-      for (const column in updates[id]) {
+      await Promise.all(Object.keys(updates[id]).map(async (column) => {
         // Check columns
-        if (!this._columns[column] || !this._columns[column].update) continue;
+        if (!this._columns[column] || !this._columns[column].update) {
+          return;
+        }
 
         // Update
         await this._columns[column].update(row, updates[id][column]);
-      }
-    }
+      }));
+    }));
   }
 
   /**
@@ -349,7 +390,10 @@ class GridHelper extends Helper {
         let load = await row.get(column);
 
         // Check format
-        if (this._columns[column].format) load = await this._columns[column].format(load, row, type);
+        if (this._columns[column].format) {
+          // set load
+          load = await this._columns[column].format(load, row, type);
+        }
 
         // Set to sanitised
         sanitised[column] = (load || '').toString();
@@ -382,14 +426,11 @@ class GridHelper extends Helper {
 
     // Check where
     if (req.body.filter) {
-      // Loop filter
-      for (const key in req.body.filter) {
-        // Check filter has key
-        if (req.body.filter.hasOwnProperty(key)) {
-          // Set filter
-          this._filter[key] = req.body.filter[key];
-        }
-      }
+      // create filter
+      Object.keys(req.body.filter).forEach((key) => {
+        // Set filter
+        this._filter[key] = req.body.filter[key];
+      });
     }
 
     // Run query
@@ -397,6 +438,18 @@ class GridHelper extends Helper {
 
     // Return result
     return await this.data(await this._where.find(), type);
+  }
+
+  /**
+   * renders form changes
+   *
+   * @param  {Form}    form
+   * @param  {Object}  response
+   *
+   * @return {Promise}
+   */
+  async formRender(form, response) {
+    console.log(form.toString());
   }
 
   /**
@@ -409,31 +462,45 @@ class GridHelper extends Helper {
    * @async
    */
   async render(req) {
+    // set body
+    const body = req ? (this._id && req.query[this._id] ? req.query[this._id] : req.query) : {};
+
     // Check rows
-    if (req && req.query.rows) this._rows = parseInt(req.query.rows);
+    if (body.rows) {
+      // set rows
+      this._rows = parseInt(body.rows, 10);
+    }
 
     // Check page
-    if (req && req.query.page) this._page = parseInt(req.query.page);
+    if (body.page) {
+      // set page
+      this._page = parseInt(body.page, 10);
+    }
 
     // Check order
-    if (req && req.query.sort) this._sort = req.query.sort;
+    if (body.sort) {
+      // set sort
+      this._sort = body.sort;
+    }
 
     // Set way
-    if (req && req.query.way) this._way = (req.query.way === 'false' ? false : parseInt(req.query.way));
+    if (body.way) {
+      // set way
+      this._way = (body.way === 'false' ? false : parseInt(body.way, 10));
+    }
 
     // Check filter
-    if (req && req.query.filter) {
-      // Loop filter
-      for (const key in req.query.filter) {
-        // Check filter has key
-        if (req.query.filter.hasOwnProperty(key)) {
-          // Check value
-          if (!req.query.filter[key].length || !Object.keys(req.query.filter[key]).length) continue;
-
-          // Set value
-          this._filter[key] = req.query.filter[key];
+    if (body.filter) {
+      // create filter
+      Object.keys(body.filter).forEach((key) => {
+        // Check value
+        if (!body.filter[key].length || !Object.keys(body.filter[key]).length) {
+          return;
         }
-      }
+
+        // Set filter
+        this._filter[key] = body.filter[key];
+      });
     }
 
     // Set response
@@ -445,6 +512,7 @@ class GridHelper extends Helper {
     };
 
     // Set standard vars
+    response.id = this._id;
     response.way = this._way;
     response.page = this._page;
     response.rows = this._rows;
@@ -462,6 +530,12 @@ class GridHelper extends Helper {
     // Do query
     await this.querySort();
 
+    // get values
+    if (this._form) {
+      // do logic
+      await this.formRender(this._form, response);
+    }
+
     // Complete query
     const rows = await this._where.skip(this._rows * (this._page - 1)).limit(this._rows).find();
 
@@ -471,41 +545,32 @@ class GridHelper extends Helper {
     // Check type columns
     if (this._type === 'columns') {
       // Loop columns
-      for (const col in this._columns) {
-        // Check columns has col
-        if (this._columns.hasOwnProperty(col)) {
-          // Check type
-          if (this._columns[col].type) continue;
-
-          // Push into columns
-          response.columns.push({
-            id     : col,
-            sort   : !!this._columns[col].sort,
-            meta   : this._columns[col].meta,
-            width  : this._columns[col].width || false,
-            title  : this._columns[col].title,
-            input  : this._columns[col].input,
-            update : !!this._columns[col].update,
-          });
-        }
-      }
+      Object.keys(this._columns).forEach((col) => {
+        // Push into columns
+        response.columns.push({
+          id     : col,
+          sort   : !!this._columns[col].sort,
+          meta   : this._columns[col].meta,
+          width  : this._columns[col].width || false,
+          title  : this._columns[col].title,
+          input  : this._columns[col].input,
+          update : !!this._columns[col].update,
+        });
+      });
     }
 
     // Loop filters
-    for (const filter in this._filters) {
-      // Check filters has filter
-      if (this._filters.hasOwnProperty(filter)) {
-        // Push into filters
-        response.filters.push({
-          id      : filter,
-          type    : this._filters[filter].type,
-          ajax    : this._filters[filter].ajax,
-          title   : this._filters[filter].title,
-          socket  : this._filters[filter].socket,
-          options : this._filters[filter].options,
-        });
-      }
-    }
+    Object.keys(this._filters).forEach((filter) => {
+      // Push into filters
+      response.filters.push({
+        id      : filter,
+        type    : this._filters[filter].type,
+        ajax    : this._filters[filter].ajax,
+        title   : this._filters[filter].title,
+        socket  : this._filters[filter].socket,
+        options : this._filters[filter].options,
+      });
+    });
 
     // Return response
     return response;

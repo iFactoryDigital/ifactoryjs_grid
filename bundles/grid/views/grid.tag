@@ -97,6 +97,7 @@
 
     // Set variables
     this.state = {
+      'id'      : opts.grid && opts.grid.id      ? opts.grid.id      : false,
       'way'     : opts.grid && opts.grid.way     ? opts.grid.way     : false,
       'rows'    : opts.grid && opts.grid.rows    ? opts.grid.rows    : 20,
       'live'    : opts.grid && opts.grid.live    ? opts.grid.live    : false,
@@ -459,6 +460,9 @@
      * loads datagrid by params
      */
     async load (updates) {
+      // require query string
+      const qs = require('qs');
+
       // set loading
       this.active  = {};
       this.loading = true;
@@ -470,41 +474,43 @@
       let state = Object.assign({}, {
         'prevent' : true
       }, eden.router.history.location.state);
+      
+      // parse query
+      const query     = qs.parse(eden.router.history.location.pathname.split('?')[1] || '') || {};
+      const gridState = {
+        'way'    : this.state.way,
+        'page'   : this.state.page,
+        'rows'   : this.state.rows,
+        'sort'   : this.state.sort,
+        'filter' : this.state.filter
+      };
 
       // set url
       if (!opts.onState) {
+        // check id
+        if (this.state.id) {
+          // set grid state
+          query[this.state.id] = gridState;
+        } else {
+          // assign to grid state
+          Object.assign(query, gridState);
+        }
+        
         // replace state
         window.eden.router.history.replace({
-          'pathname' : eden.router.history.location.pathname.split('?')[0] + '?' + jQuery.param({
-            'way'    : this.state.way,
-            'page'   : this.state.page,
-            'rows'   : this.state.rows,
-            'sort'   : this.state.sort,
-            'filter' : this.state.filter
-          }),
-          'state' : state,
+          'state'    : state,
+          'pathname' : eden.router.history.location.pathname.split('?')[0] + '?' + qs.stringify(query),
         });
       } else {
         // run on state
-        opts.onState({
-          'way'    : this.state.way,
-          'page'   : this.state.page,
-          'rows'   : this.state.rows,
-          'sort'   : this.state.sort,
-          'filter' : this.state.filter
-        });
+        opts.onState(gridState);
       }
 
       // log data
       let res = await fetch(this.state.route, {
-        'body' : JSON.stringify({
-          'way'     : this.state.way,
-          'page'    : this.state.page,
-          'rows'    : this.state.rows,
-          'sort'    : this.state.sort,
-          'filter'  : this.state.filter,
-          'updates' : updates
-        }),
+        'body' : JSON.stringify(Object.assign(gridState, {
+          updates : updates
+        })),
         'method'  : 'post',
         'headers' : {
           'Content-Type': 'application/json'
@@ -516,7 +522,10 @@
       let data = await res.json();
 
       // check if live
-      if (this.state.live) this.emit('deafen');
+      if (this.state.live) {
+        // emit deafen
+        this.emit('deafen');
+      }
 
       // loop data
       for (var key in data) {
@@ -547,6 +556,7 @@
 
       // set variables
       this.state = {
+        'id'      : opts.grid && opts.grid.id      ? opts.grid.id      : false,
         'way'     : opts.grid && opts.grid.way     ? opts.grid.way     : false,
         'rows'    : opts.grid && opts.grid.rows    ? opts.grid.rows    : 20,
         'data'    : opts.grid && opts.grid.data    ? opts.grid.data    : [],
