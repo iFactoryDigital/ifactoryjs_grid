@@ -33,7 +33,7 @@ class GridHelper extends Helper {
     this.render = this.render.bind(this);
 
     // create normal methods
-    ['id', 'form', 'type', 'limit', 'page', 'model', 'route'].forEach((method) => {
+    ['id', 'form', 'type', 'limit', 'page', 'model', 'route', 'models'].forEach((method) => {
       // do methods
       this[method] = (item) => {
         // set data method
@@ -371,6 +371,7 @@ class GridHelper extends Helper {
       count,
     } = await this.query.execute();
 
+    // create response object
     const response = {
       state : Object.assign({}, this.state.get(), {
         page,
@@ -378,6 +379,14 @@ class GridHelper extends Helper {
         limit,
         count,
         rows : await Promise.all(rows.map(async (row) => {
+          // sanitise row
+          if (this.get('models')) {
+            // return sanitised model
+            return Object.assign(await row.sanitise(), {
+              _id : row.get('_id').toString()
+            });
+          }
+
           // set result
           const result = {
             _id : row.get('_id').toString(),
@@ -404,25 +413,29 @@ class GridHelper extends Helper {
       }),
       data : {
         id      : this.get('id'),
+        model   : this.get('models') ? this.get('model').constructor.name.toLowerCase() : undefined,
         route   : this.get('route'),
-        columns : [],
+        columns : this.get('models') ? undefined : [],
         filters : [],
       },
     };
 
-    // add columns
-    for (const [key, value] of this.get('column')) {
-      // push column
-      response.data.columns.push({
-        id       : key,
-        sort     : !!value.sort,
-        meta     : value.meta,
-        width    : value.width || false,
-        title    : value.title,
-        input    : value.input,
-        update   : !!value.update,
-        priority : value.priority || 0,
-      });
+    // get models
+    if (!this.get('models')) {
+      // add columns
+      for (const [key, value] of this.get('column')) {
+        // push column
+        response.data.columns.push({
+          id       : key,
+          sort     : !!value.sort,
+          meta     : value.meta,
+          width    : value.width || false,
+          title    : value.title,
+          input    : value.input,
+          update   : !!value.update,
+          priority : value.priority || 0,
+        });
+      }
     }
 
     // add filters
