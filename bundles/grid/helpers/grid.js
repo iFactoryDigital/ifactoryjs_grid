@@ -34,7 +34,7 @@ class GridHelper extends Helper {
     this.render = this.render.bind(this);
 
     // create normal methods
-    ['id', 'type', 'limit', 'page', 'model', 'route', 'models'].forEach((method) => {
+    ['id', 'row', 'limit', 'page', 'model', 'route', 'models'].forEach((method) => {
       // do methods
       this[method] = (item) => {
         // set data method
@@ -426,6 +426,7 @@ class GridHelper extends Helper {
       }),
       data : {
         id      : this.get('id'),
+        row     : this.get('row'),
         model   : this.get('models') ? (new FormModel()).constructor.name.toLowerCase() : undefined,
         route   : this.get('route'),
         columns : [],
