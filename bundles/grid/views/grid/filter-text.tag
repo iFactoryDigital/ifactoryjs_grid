@@ -15,9 +15,9 @@
      *
      * @return {string}
      */
-    filterValue () {
+    filterValue() {
       // Return filter value
-      return (opts.values || {})[opts.filter.id] || '';
+      return opts.dataValue || '';
     }
 
     /**
@@ -25,7 +25,7 @@
      *
      * @param {Event} e
      */
-    onFilter (e) {
+    onFilter(e) {
       // Send to opts
       if (opts.onFilter) opts.onFilter(opts.filter, e.target.value);
     }

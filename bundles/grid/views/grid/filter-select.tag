@@ -5,7 +5,7 @@
     </label>
 
     <select if={ opts.filter.options } class={ 'form-control' : true } onchange={ onFilter }>
-      <option each={ option, i in opts.filter.options } value={ option.value } selected={ option.value === filterValue () }>
+      <option each={ option, i in opts.filter.options } value={ option.value } selected={ option.value === filterValue() }>
         { option.name }
       </option>
     </select>
@@ -19,9 +19,9 @@
      *
      * @return {string}
      */
-    filterValue () {
+    filterValue() {
       // Return filter value
-      return (opts.values || {})[opts.filter.id] || false;
+      return opts.dataValue || false;
     }
 
     /**
@@ -29,7 +29,7 @@
      *
      * @param {Event} e
      */
-    onFilter (e) {
+    onFilter(e) {
       // Send to opts
       if (opts.onFilter) opts.onFilter(opts.filter, e.target.value);
     }

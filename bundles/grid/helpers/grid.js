@@ -1,5 +1,9 @@
 // Require local class dependencies
-const Helper = require('helper');
+const Helper  = require('helper');
+const dotProp = require('dot-prop');
+
+// require models
+const Grid = model('grid');
 
 /**
  * Create Grid Helper class
@@ -8,279 +12,439 @@ class GridHelper extends Helper {
   /**
    * Construct Grid Helper class
    *
-   * @param {object} options
+   * @param {Object} opts
    */
-  constructor(options) {
+  constructor(opts) {
     // Run super
     super();
 
-    // Bind public methods
-    this.data = this.data.bind(this);
-    this.type = this.type.bind(this);
-    this.rows = this.rows.bind(this);
-    this.live = this.live.bind(this);
-    this.page = this.page.bind(this);
+    // set data
+    this.__data = opts || {};
+    this.__state = {
+      sort   : {},
+      filter : {},
+    };
+
+    // bind methods
+    this.get = this.get.bind(this);
+    this.set = this.set.bind(this);
     this.post = this.post.bind(this);
-    this.sort = this.sort.bind(this);
-    this.model = this.model.bind(this);
-    this.query = this.query.bind(this);
-    this.route = this.route.bind(this);
-    this.filter = this.filter.bind(this);
+    this.build = this.build.bind(this);
     this.render = this.render.bind(this);
-    this.querySort = this.querySort.bind(this);
 
-    // Bind private methods
-    this._bind = this._bind.bind(this);
+    // create normal methods
+    ['id', 'form', 'type', 'limit', 'page', 'model', 'route'].forEach((method) => {
+      // do methods
+      this[method] = (item) => {
+        // set data method
+        this.__data[method] = item;
 
-    // Set default options
-    options = options || {};
+        // set model
+        if (method === 'model') this.building = this.build();
 
-    // Set private variables
-    this._id = options.id || false;
-    this._way = options.way || false;
-    this._rows = options.rows || 20;
-    this._type = options.type || 'columns';
-    this._live = options.live || false;
-    this._page = options.page || 1;
-    this._sort = options.sort || false;
-    this._model = options.model || false;
-    this._where = options.where || this._model;
-    this._route = options.route || '';
-    this._filter = options.filter || {};
-    this._filters = options.filters || {};
-    this._columns = options.columns || {};
+        // return this
+        return this;
+      };
+    });
 
-    // Run bind
-    this._bind();
+    // set sort
+    this.sort = (sort, way) => {
+      // add sort
+      this.state.set('sort.sort', sort);
+      this.state.set('sort.way', way);
+
+      // return this
+      return this;
+    };
+
+    // create map methods
+    ['column', 'filter'].forEach((method) => {
+      // do methods
+      this[method] = (key, item) => {
+        // set data method
+        if (!this.__data[method]) {
+          // set map
+          this.__data[method] = new Map();
+        }
+
+        // set in map
+        this.__data[method].set(key, item);
+
+        // return this
+        return this;
+      };
+    });
+
+    // create query
+    this.state = {};
+
+    // loop query methods
+    ['Set', 'Get'].forEach((method) => {
+      // set in query
+      this.state[method.toLowerCase()] = this[`state${method}`].bind(this);
+    });
+
+    // create query
+    this.query = {};
+
+    // loop query methods
+    ['Filter', 'Sort', 'Execute'].forEach((method) => {
+      // set in query
+      this.query[method.toLowerCase()] = this[`query${method}`].bind(this);
+    });
+
+    // build
+    if (this.__data.model) this.building = this.build();
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // Build Methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * build logic
+   *
+   * @return {*}
+   */
+  build() {
+    // Check model
+    if (this.__data.model) {
+      // set where
+      this.__query = this.__data.model;
+
+      // Bind query methods
+      ['where', 'match', 'eq', 'ne', 'or', 'and', 'elem', 'in', 'nin', 'gt', 'lt', 'gte', 'lte'].forEach((method) => {
+        // Create new function
+        this[method] = (...args) => {
+          // Set where
+          return this.__query = this.__query[method](...args);
+        };
+      });
+    }
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // Get/Set methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * get value
+   *
+   * @param  {String} key
+   *
+   * @return {*}
+   */
+  get(key) {
+    // gets key
+    if (!key) return this.__data;
+
+    // get key from data
+    return dotProp.get(this.__data, key);
   }
 
   /**
-   * Set model
+   * get value
    *
-   * @param  {*} id
+   * @param  {String} key
+   * @param  {*}      value
    *
-   * @return {GridHelper}
+   * @return {*}
    */
-  id(id) {
-    // Set model
-    this._id = id;
+  set(key, value) {
+    // get key from data
+    dotProp.set(this.__data, key, value);
 
-    // Allow chainable
+    // emit event
+    this.emit(key, value);
+
+    // check contains parent key
+    if (key.includes('.')) {
+      // emit parent key
+      this.emit(key.split('.')[0], this.get(key.split('.')[0]));
+    }
+
+    // return this
     return this;
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // State methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * get value
+   *
+   * @param  {String}  key
+   * @param  {Boolean} backup
+   *
+   * @return {*}
+   */
+  stateGet(key, backup) {
+    // gets key
+    if (!key) return this.__state;
+
+    // get key from data
+    return dotProp.get(this.__state, key) || (backup ? this.get(key) : undefined);
   }
 
   /**
-   * Set rows
+   * get value
    *
-   * @param  {*} rows
+   * @param  {String} key
+   * @param  {*}      value
    *
-   * @return {GridHelper}
+   * @return {*}
    */
-  rows(rows) {
-    // Set rows
-    this._rows = rows;
+  stateSet(key, value) {
+    // get key from data
+    dotProp.set(this.__state, key, value);
 
-    // Allow chainable
+    // emit event
+    this.emit(key, value);
+
+    // check contains parent key
+    if (key.includes('.')) {
+      // emit parent key
+      this.emit(key.split('.')[0], this.get(key.split('.')[0]));
+    }
+
+    // return this
     return this;
   }
 
-  /**
-   * Set type
-   *
-   * @param  {*} type
-   *
-   * @return {GridHelper}
-   */
-  type(type) {
-    // Set type
-    this._type = type;
-
-    // Allow chainable
-    return this;
-  }
-
-  /**
-   * Set live
-   *
-   * @param  {boolean} live
-   *
-   * @return {GridHelper}
-   */
-  live(live) {
-    // Set live
-    this._live = live;
-
-    // Allow chainable
-    return this;
-  }
-
-  /**
-   * Set page
-   *
-   * @param  {*} page
-   *
-   * @return {GridHelper}
-   */
-  page(page) {
-    // Set page
-    this._page = page;
-
-    // Allow chainable
-    return this;
-  }
-
-  /**
-   * Set sort
-   *
-   * @param  {string} sort
-   * @param  {number} way
-   *
-   * @return {GridHelper}
-   */
-  sort(sort, way) {
-    // Set way and sort
-    this._way = way;
-    this._sort = sort;
-
-    // Allow chainable
-    return this;
-  }
-
-  /**
-   * Set model
-   *
-   * @param  {*} model
-   *
-   * @return {GridHelper}
-   */
-  model(model) {
-    // Set model
-    this._model = model;
-
-    // Run model bind
-    this._bind();
-
-    // Allow chainable
-    return this;
-  }
-
-  /**
-   * Set model
-   *
-   * @param  {*} form
-   *
-   * @return {GridHelper}
-   */
-  form(form) {
-    // Set model
-    this._form = form;
-
-    // Allow chainable
-    return this;
-  }
-
-  /**
-   * Set route
-   *
-   * @param  {string} route
-   *
-   * @return {GridHelper}
-   */
-  route(route) {
-    // Set route
-    this._route = route;
-
-    // Allow chainable
-    return this;
-  }
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // Query methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
 
   /**
    * Returns filtered query
    *
-   * @return {Promise}
-   *
-   * @async
+   * @returns {GridHelper}
    */
-  async query() {
-    // Check filters
-    await Promise.all(Object.keys(this._filter).map(async (filter) => {
-      // Check filter exists
-      if (!this._filters[filter]) {
-        return;
-      }
+  async queryFilter() {
+    // await query
+    if (!this.__data.filter) {
+      // set map
+      this.__data.filter = new Map();
+    }
 
-      // Check if filter has query
-      if (this._filters[filter].query) {
-        // Run query
-        await this._filters[filter].query(this._filter[filter]);
+    // loop while
+    for (const [key, value] of this.__data.filter) {
+      // check value
+      if (!value) continue;
+
+      // do filter
+      if (!this.state.get(`filter.${key}`)) continue;
+
+      // if query
+      if (value.query) {
+        // do query
+        await value.query(this.state.get(`filter.${key}`));
       } else {
         // Run and
-        this.where(filter, this._filter[filter]);
+        this.where(key, this.state.get(`filter.${key}`));
       }
-    }));
-
-    // Return this
-    return this;
+    }
   }
 
   /**
    * Returns sorted query
    *
    * @return {Promise}
-   *
-   * @async
    */
   async querySort() {
-    // Check sort
-    if (this._sort && this._columns[this._sort] && this._columns[this._sort].sort && this._way !== false) {
-      // Check type
-      if (typeof this._columns[this._sort].sort === 'function') {
-        // Set sort
-        this._where = await this._columns[this._sort].sort(this._where, this._way);
-      } else if (this._columns[this._sort].sort === true) {
-        // Set sort directly
-        this._where = this._where.sort(this._sort, this._way);
+    // await query
+    if (!this.__data.column) {
+      // set map
+      this.__data.column = new Map();
+    }
+
+    // loop while
+    const way = this.state.get('sort.way') === 'false' || this.state.get('sort').way === false ? false : parseInt((this.state.get('sort.way', true) || -1), 10);
+    const sort = this.state.get('sort.sort', true) ? this.state.get('sort.sort', true) : false;
+
+    // set sort
+    if (sort && way !== false) {
+      // check column has sort function
+      if (this.get('column').get(sort)) {
+        // check column
+        if (this.get('column').get(sort).sort === true) {
+          // sort
+          this.__query = this.__query.sort(sort, way);
+        } else {
+          // await sort function
+          await this.get('column').get(sort).sort(this.__query, way);
+        }
+      } else {
+        // do normal sort
+        this.__query = this.__query.sort(sort, way);
       }
-    } else if (this._sort && this._way !== false) {
-      // Set sort directly
-      this._where = this._where.sort(this._sort, this._way);
     }
 
     // Allow chainable
-    return this;
+    return {
+      way,
+      sort,
+    };
   }
 
   /**
-   * Add filter
+   * Returns queried rows
    *
-   * @param  {string} key
-   * @param  {*}      filter
-   *
-   * @return {GridHelper}
+   * @return {Promise}
    */
-  filter(key, filter) {
-    // Set filter
-    this._filters[key] = filter;
+  async queryExecute() {
+    // await filter and sort
+    await this.query.filter();
+    const sort = await this.query.sort();
 
-    // Allow chainable
-    return this;
+    // create result
+    const result = {
+      sort,
+      count : await this.__query.count(),
+    };
+
+    // add extra result logic
+    result.limit = parseInt((this.state.get('limit', 20) || 20), 10);
+    result.page = parseInt((this.state.get('page', true) || 1), 10);
+    result.skip = result.limit * (result.page - 1);
+
+    // add rows
+    result.rows = await this.__query.skip(result.skip).limit(result.limit).find();
+
+    // return rows
+    return result;
   }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // Render methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Add column
+   * renders page
    *
-   * @param  {string} key
-   * @param  {*}      column
+   * @param  {Request} req
    *
-   * @return {GridHelper}
+   * @return {*}
    */
-  column(key, column) {
-    // Set column
-    this._columns[key] = column;
+  async render(req) {
+    // create state
+    const state = { ...(req.query || {}), ...(req.body || {}) };
 
-    // Allow chainable
-    return this;
+    // set state
+    Object.keys(state).forEach(key => this.state.set(key, state[key]));
+
+    // check for digested updates
+    if (state.update) {
+      // do updates
+      await Promise.all(Object.keys(state.update).map(async (id) => {
+        // get row
+        const row = await this.get('model').findById(id);
+
+        // Loop columns
+        await Promise.all(Object.keys(state.update[id]).map(async (column) => {
+          // Check columns
+          if (!this.get('column').get(column) || !this.get('column').get(column).update) return;
+
+          // Update
+          await this.get('column').get(column).update(row, state.update[id][column]);
+        }));
+      }));
+    }
+
+    // execute query
+    const {
+      page,
+      rows,
+      sort,
+      limit,
+      count,
+    } = await this.query.execute();
+
+    const response = {
+      state : Object.assign({}, this.state.get(), {
+        page,
+        sort,
+        limit,
+        count,
+        rows : await Promise.all(rows.map(async (row) => {
+          // set result
+          const result = {
+            _id : row.get('_id').toString(),
+          };
+
+          // loop columns
+          for (const [key, value] of this.get('column')) {
+            // check column
+            if (!this.get('column').has(key)) continue;
+
+            // get column
+            let element = await row.get(key);
+
+            // check format
+            if (value.format) element = await value.format(element, row);
+
+            // return element
+            result[key] = (element || '').toString();
+          }
+
+          // return done row
+          return result;
+        })),
+      }),
+      data : {
+        id      : this.get('id'),
+        route   : this.get('route'),
+        columns : [],
+        filters : [],
+      },
+    };
+
+    // add columns
+    for (const [key, value] of this.get('column')) {
+      // push column
+      response.data.columns.push({
+        id       : key,
+        sort     : !!value.sort,
+        meta     : value.meta,
+        width    : value.width || false,
+        title    : value.title,
+        input    : value.input,
+        update   : !!value.update,
+        priority : value.priority || 0,
+      });
+    }
+
+    // add filters
+    for (const [key, value] of this.get('filter')) {
+      // push column
+      response.data.filters.push({
+        id       : key,
+        type     : value.type,
+        title    : value.title,
+        options  : value.options,
+        priority : value.priority || 0,
+      });
+    }
+
+    // sort columns/filters
+    response.data.columns.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    response.data.filters.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+
+    // return response
+    return response;
   }
+
 
   /**
    * Runs post request
@@ -289,311 +453,8 @@ class GridHelper extends Helper {
    * @param {Response} res
    */
   async post(req, res) {
-    // Check updates
-    if (req.body.updates) {
-      // do updates
-      await this.updates(req.body.updates);
-    }
-
-    // Check rows
-    if (req.body.rows) {
-      // set rows
-      this._rows = parseInt(req.body.rows, 10);
-    }
-
-    // Check page
-    if (req.body.page) {
-      // set page
-      this._page = parseInt(req.body.page, 10);
-    }
-
-    // Check sort
-    if (req.body.sort) {
-      // set sort
-      this._sort = req.body.sort;
-    }
-
-    // Set way
-    this._way = req.body.way;
-
-    // Check filter
-    if (req.body.filter) {
-      // create filter
-      Object.keys(req.body.filter).forEach((key) => {
-        // Check value
-        if (!req.body.filter[key].length && !Object.keys(req.body.filter[key]).length) {
-          return;
-        }
-
-        // Set filter
-        this._filter[key] = req.body.filter[key];
-      });
-    }
-
-    // Send result
-    res.json(await this.render());
-  }
-
-  /**
-   * Get updates
-   *
-   * @param  {Object} updates
-   *
-   * @return {Promise}
-   */
-  async updates(updates) {
-    // Loop keys
-    await Promise.all(Object.keys(updates).map(async (id) => {
-      // Get id
-      const row = await this._model.findById(id);
-
-      // Loop columns
-      await Promise.all(Object.keys(updates[id]).map(async (column) => {
-        // Check columns
-        if (!this._columns[column] || !this._columns[column].update) {
-          return;
-        }
-
-        // Update
-        await this._columns[column].update(row, updates[id][column]);
-      }));
-    }));
-  }
-
-  /**
-   * Exports columns
-   *
-   * @param  {array}  rows
-   * @param  {string} type
-   *
-   * @return {Promise}
-   */
-  data(rows, type) {
-    // Check type
-    if (this._type !== 'columns') {
-      // Return sanitised
-      return Promise.all(rows.map((row) => {
-        return row.sanitise();
-      }));
-    }
-    // Return map
-    return Promise.all(rows.map(async (row) => {
-      // Set sanitised
-      const sanitised = {};
-
-      // Loop columns
-      await Promise.all(Object.keys(this._columns).map(async (column) => {
-        // Check if column export
-        if (typeof this._columns[column].type !== 'undefined' && type !== this._columns[column].type) return;
-
-        // Load column
-        let load = await row.get(column);
-
-        // Check format
-        if (this._columns[column].format) {
-          // set load
-          load = await this._columns[column].format(load, row, type);
-        }
-
-        // Set to sanitised
-        sanitised[column] = (load || '').toString();
-      }));
-
-      // Set id row
-      sanitised._id = row.get('_id').toString();
-
-      // Return sanitised
-      return sanitised;
-    }));
-  }
-
-  /**
-   * Runs post request
-   *
-   * @param  {Request}  req
-   * @param  {string}   type
-   *
-   * @return {Promise}
-   *
-   * @async
-   */
-  async export(req, type) {
-    // Check order
-    if (req.body.sort) this._sort = req.body.sort;
-
-    // Set way
-    this._way = req.body.way;
-
-    // Check where
-    if (req.body.filter) {
-      // create filter
-      Object.keys(req.body.filter).forEach((key) => {
-        // Set filter
-        this._filter[key] = req.body.filter[key];
-      });
-    }
-
-    // Run query
-    await this.query();
-
-    // Return result
-    return await this.data(await this._where.find(), type);
-  }
-
-  /**
-   * renders form changes
-   *
-   * @param  {Form}    form
-   * @param  {Object}  response
-   *
-   * @return {Promise}
-   */
-  async formRender(form, response) {
-    console.log(form.toString());
-  }
-
-  /**
-   * Renders grid view
-   *
-   * @param {Request} req
-   *
-   * @return {*}
-   *
-   * @async
-   */
-  async render(req) {
-    // set body
-    const body = req ? (this._id && req.query[this._id] ? req.query[this._id] : req.query) : {};
-
-    // Check rows
-    if (body.rows) {
-      // set rows
-      this._rows = parseInt(body.rows, 10);
-    }
-
-    // Check page
-    if (body.page) {
-      // set page
-      this._page = parseInt(body.page, 10);
-    }
-
-    // Check order
-    if (body.sort) {
-      // set sort
-      this._sort = body.sort;
-    }
-
-    // Set way
-    if (body.way) {
-      // set way
-      this._way = (body.way === 'false' ? false : parseInt(body.way, 10));
-    }
-
-    // Check filter
-    if (body.filter) {
-      // create filter
-      Object.keys(body.filter).forEach((key) => {
-        // Check value
-        if (!body.filter[key].length || !Object.keys(body.filter[key]).length) {
-          return;
-        }
-
-        // Set filter
-        this._filter[key] = body.filter[key];
-      });
-    }
-
-    // Set response
-    const response = {
-      data    : [],
-      filter  : this._filter,
-      filters : [],
-      columns : [],
-    };
-
-    // Set standard vars
-    response.id = this._id;
-    response.way = this._way;
-    response.page = this._page;
-    response.rows = this._rows;
-    response.sort = this._sort;
-    response.live = this._live;
-    response.type = this._type;
-    response.route = this._route;
-
-    // Do query
-    await this.query();
-
-    // Set total
-    response.total = await this._where.count();
-
-    // Do query
-    await this.querySort();
-
-    // get values
-    if (this._form) {
-      // do logic
-      await this.formRender(this._form, response);
-    }
-
-    // Complete query
-    const rows = await this._where.skip(this._rows * (this._page - 1)).limit(this._rows).find();
-
-    // Get data
-    response.data = await this.data(rows, false);
-
-    // Check type columns
-    if (this._type === 'columns') {
-      // Loop columns
-      Object.keys(this._columns).forEach((col) => {
-        // Push into columns
-        response.columns.push({
-          id     : col,
-          sort   : !!this._columns[col].sort,
-          meta   : this._columns[col].meta,
-          width  : this._columns[col].width || false,
-          title  : this._columns[col].title,
-          input  : this._columns[col].input,
-          update : !!this._columns[col].update,
-        });
-      });
-    }
-
-    // Loop filters
-    Object.keys(this._filters).forEach((filter) => {
-      // Push into filters
-      response.filters.push({
-        id      : filter,
-        type    : this._filters[filter].type,
-        ajax    : this._filters[filter].ajax,
-        title   : this._filters[filter].title,
-        socket  : this._filters[filter].socket,
-        options : this._filters[filter].options,
-      });
-    });
-
-    // Return response
-    return response;
-  }
-
-  /**
-   * Binds model
-   */
-  _bind() {
-    // Check model
-    if (!this._model) return;
-
-    // Check where
-    if (!this._where) this._where = this._model;
-
-    // Bind query methods
-    ['where', 'match', 'eq', 'ne', 'or', 'and', 'elem', 'in', 'nin', 'gt', 'lt', 'gte', 'lte'].forEach((method) => {
-      // Create new function
-      this[method] = (...args) => {
-        // Set where
-        return this._where = this._where[method](...args);
-      };
-    });
+    // return json
+    res.json(await this.render(req, res));
   }
 }
 
