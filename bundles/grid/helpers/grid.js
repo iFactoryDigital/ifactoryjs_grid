@@ -371,6 +371,9 @@ class GridHelper extends Helper {
       count,
     } = await this.query.execute();
 
+    // get model
+    const Model = this.get('model');
+
     // create response object
     const response = {
       state : Object.assign({}, this.state.get(), {
@@ -413,29 +416,27 @@ class GridHelper extends Helper {
       }),
       data : {
         id      : this.get('id'),
-        model   : this.get('models') ? this.get('model').constructor.name.toLowerCase() : undefined,
+        model   : this.get('models') ? (new Model()).constructor.name.toLowerCase() : undefined,
         route   : this.get('route'),
-        columns : this.get('models') ? undefined : [],
+        columns : [],
         filters : [],
       },
     };
 
     // get models
-    if (!this.get('models')) {
-      // add columns
-      for (const [key, value] of this.get('column')) {
-        // push column
-        response.data.columns.push({
-          id       : key,
-          sort     : !!value.sort,
-          meta     : value.meta,
-          width    : value.width || false,
-          title    : value.title,
-          input    : value.input,
-          update   : !!value.update,
-          priority : value.priority || 0,
-        });
-      }
+    for (const [key, value] of this.get('column')) {
+      // push column
+      response.data.columns.push({
+        id       : key,
+        tag      : value.tag,
+        sort     : !!value.sort,
+        meta     : value.meta,
+        width    : value.width || false,
+        title    : value.title,
+        input    : value.input,
+        update   : !!value.update,
+        priority : value.priority || 0,
+      });
     }
 
     // add filters

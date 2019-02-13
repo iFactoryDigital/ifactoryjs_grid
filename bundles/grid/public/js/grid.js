@@ -26,8 +26,12 @@ class GridStore extends Events {
     // set variables
     this.__data = data;
     this.__state = state;
+    this.__update = this.__update.bind(this);
     this.__updates = {};
     this.__frontend = !!frontend;
+
+    // set rows
+    this.__rows = state.rows;
 
     // bind methods
     this.get = this.get.bind(this);
@@ -63,20 +67,29 @@ class GridStore extends Events {
      * sets models
      */
     const setModels = () => {
-      // get rows
+      // remove update listener
+      this.__rows.forEach((row) => {
+        // remove listener
+        if (row.removeListener) row.removeListener('update', this.__update);
+      });
+
+      // check model
       if (this.get('model')) {
         // set rows
-        this.state.set('rows', this.state.get('rows').map((row) => {
+        this.__rows = this.state.get('rows').map((row) => {
           // create model
-          const model = new EdenModel(this.get('model'), row._id, row);
+          const model = this.__frontend ? eden.model.get(this.get('model'), row._id, row) : new EdenModel(this.get('model'), row._id, row);
+
+          // emit update
+          model.on('update', this.__update);
 
           // Return model
           return model;
-        }));
-
-        // emit update
-        this.emit('update');
+        });
       }
+
+      // emit update
+      this.emit('update');
     };
 
     // check if use models
@@ -105,6 +118,16 @@ class GridStore extends Events {
 
     // get key from data
     return dotProp.get(this.__data, key);
+  }
+
+  /**
+   * get rows
+   *
+   * @return {Array}
+   */
+  rows() {
+    // return rows
+    return this.__rows;
   }
 
   /**
@@ -243,12 +266,12 @@ class GridStore extends Events {
     dotProp.set(this.__state, key, value);
 
     // emit event
-    this.emit(key, value);
+    this.emit(`state.${key}`, value);
 
     // check contains parent key
     if (key.includes('.')) {
       // emit parent key
-      this.emit(key.split('.')[0], this.get(key.split('.')[0]));
+      this.emit(`state.${key.split('.')[0]}`, this.state.get(key.split('.')[0]));
     }
 
     // return this
@@ -269,6 +292,14 @@ class GridStore extends Events {
   isLoading() {
     // return is grid loading
     return !!this.__loading;
+  }
+
+  /**
+   * emits update
+   */
+  __update() {
+    // emit update
+    this.emit('update');
   }
 }
 

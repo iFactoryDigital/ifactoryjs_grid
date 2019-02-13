@@ -6,12 +6,12 @@
       </div>
     </div>
     <div if={ grid.get('row') } class={ getClass('rows', 'grid-rows') }>
-      <div data-is={ grid.get('row') } each={ row, i in grid.state.get('rows') } row={ row } grid={ grid } />
+      <div data-is={ grid.get('row') } each={ row, i in grid.rows() } row={ row } grid={ grid } />
     </div>
     <table if={ !grid.get('row') } class={ getClass('table', 'table table-striped') }>
       <thead>
         <tr>
-          <th each={ column, i in grid.get('columns') } data-column={ i } width={ column.width }>
+          <th each={ column, i in grid.get('columns') } data-column={ i } width={ column.width } no-reorder>
             <a href="#" if={ column.sort } class={ 'pull-right sort' : true, 'text-primary' : isSort(column), 'text-muted' : !isSort(column) } onclick={ onSort }>
               <i class={ 'fa mr-2' : true, 'fa-sort' : !grid.state.get('sort.way') || !isSort(column), 'fa-sort-up' : grid.state.get('sort.way') === 1 && isSort(column), 'fa-sort-down' : grid.state.get('sort.way') === -1 && isSort(column) } />
             </a>
@@ -20,9 +20,10 @@
         </tr>
       </thead>
       <tbody>
-        <tr each={ row, i in grid.state.get('rows') }>
-          <td each={ column, a in grid.get('columns') } data-index={ i } data-column={ column.id } onclick={ onOpenUpdate } class={ 'grid-update' : column.update }>
-            <raw data={ { 'html' : row[column.id] } } if={ !column.update } />
+        <tr each={ row, i in grid.rows() } no-reorder>
+          <td each={ column, a in grid.get('columns') } data-index={ i } data-column={ column.id } onclick={ onOpenUpdate } class={ 'grid-update' : column.update } no-reorder>
+            <div if={ column.tag } data-is={ column.tag } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id) : row[column.id] } />
+            <raw if={ !column.tag } data={ { 'html' : grid.get('model') ? row.get(column.id) : row[column.id] } } />
           </td>
         </tr>
       </tbody>
