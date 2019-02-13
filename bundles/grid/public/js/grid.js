@@ -19,19 +19,21 @@ class GridStore extends Events {
    * @param {Object} grid
    * @param {Object} state
    */
-  constructor(data, state, frontend) {
+  constructor(grid, frontend) {
     // run super
     super();
 
     // set variables
-    this.__data = data;
-    this.__state = state;
+    Object.keys(grid).forEach((val) => {
+      // set value
+      this[`__${val}`] = grid[val];
+    });
     this.__update = this.__update.bind(this);
     this.__updates = {};
     this.__frontend = !!frontend;
 
     // set rows
-    this.__rows = state.rows;
+    this.__rows = this.__state.rows;
 
     // bind methods
     this.get = this.get.bind(this);
@@ -45,6 +47,15 @@ class GridStore extends Events {
     ['Set', 'Get'].forEach((method) => {
       // set in query
       this.state[method.toLowerCase()] = this[`state${method}`].bind(this);
+    });
+
+    // create query
+    this.include = {};
+
+    // loop query methods
+    ['Set', 'Get'].forEach((method) => {
+      // set in query
+      this.include[method.toLowerCase()] = this[`include${method}`].bind(this);
     });
 
     // set building
@@ -224,6 +235,12 @@ class GridStore extends Events {
     Object.keys(data.data).forEach(key => this.set(key, data.data[key]));
     Object.keys(data.state).forEach(key => this.state.set(key, data.state[key]));
 
+    // set includes
+    Object.keys(data).filter(key => !['data', 'state'].includes(key)).forEach((key) => {
+      // set value
+      this[`__${key}`] = data[key];
+    });
+
     // set loading
     this.__loading = false;
 
@@ -272,6 +289,54 @@ class GridStore extends Events {
     if (key.includes('.')) {
       // emit parent key
       this.emit(`state.${key.split('.')[0]}`, this.state.get(key.split('.')[0]));
+    }
+
+    // return this
+    return this;
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // State methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * get value
+   *
+   * @param  {String} from
+   * @param  {String} key
+   *
+   * @return {*}
+   */
+  includeGet(from, key) {
+    // gets key
+    if (!key) return this[`__${from}`];
+
+    // get key from data
+    return dotProp.get(this[`__${from}`], key);
+  }
+
+  /**
+   * get value
+   *
+   * @param  {String} from
+   * @param  {String} key
+   * @param  {*}      value
+   *
+   * @return {*}
+   */
+  includeSet(from, key, value) {
+    // get key from data
+    dotProp.set(this[`__${from}`], key, value);
+
+    // emit event
+    this.emit(`${from}.${key}`, value);
+
+    // check contains parent key
+    if (key.includes('.')) {
+      // emit parent key
+      this.emit(`${from}.${key.split('.')[0]}`, this.include.get(from, key.split('.')[0]));
     }
 
     // return this

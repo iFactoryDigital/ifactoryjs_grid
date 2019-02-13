@@ -9,7 +9,7 @@ riot.mixin('grid', {
     const Grid = require('grid/public/js/grid');
 
     // on update
-    this.grid = new Grid(this.opts.grid.data, this.opts.grid.state, this.eden.frontend);
+    this.grid = new Grid(this.opts.grid, this.eden.frontend);
 
     // on update
     this.grid.on('update', this.update);

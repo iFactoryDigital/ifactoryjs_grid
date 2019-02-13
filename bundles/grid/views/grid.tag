@@ -21,9 +21,15 @@
       </thead>
       <tbody>
         <tr each={ row, i in grid.rows() } no-reorder>
-          <td each={ column, a in grid.get('columns') } data-index={ i } data-column={ column.id } onclick={ onOpenUpdate } class={ 'grid-update' : column.update } no-reorder>
-            <div if={ column.tag } data-is={ column.tag } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id) : row[column.id] } />
-            <raw if={ !column.tag } data={ { 'html' : grid.get('model') ? row.get(column.id) : row[column.id] } } />
+          <td each={ column, a in grid.get('columns') } data-row={ grid.get('model') ? row.get('_id') : row._id } data-column={ column.id } onclick={ onShouldUpdate } class={ 'grid-update' : column.update, 'grid-updating' : isUpdating(row, column) } no-reorder>
+            <div if={ isUpdating(row, column) } data-is={ column.update } on-save={ onSave } column={ column } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id) : row[column.id] } />
+          
+            <div if={ column.tag && !isUpdating(row, column) } class="d-inline-block" data-is={ column.tag } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id) : row[column.id] } />
+            <raw if={ !column.tag && !isUpdating(row, column) } data={ { 'html' : grid.get('model') ? row.get(column.id) : row[column.id] } } />
+            
+            <span if={ column.update && !isUpdating(row, column) } class="grid-update-item float-right">
+              <i class="fa fa-ellipsis-h" />
+            </span>
           </td>
         </tr>
       </tbody>
@@ -76,6 +82,9 @@
     this.mixin('grid');
     this.mixin('model');
     
+    // set updating
+    this.__updating = new Map();
+    
     // set grid
     if (this.eden.frontend) window.builtGrid = this.grid;
     
@@ -103,11 +112,24 @@
     }
     
     /**
+     * returns is loading
+     *
+     * @param  {Object}  column
+     * @param  {Object}  row
+     *
+     * @return {Boolean}
+     */
+    isUpdating(row, column) {
+      // return has
+      return this.__updating.has((this.grid.get('model') ? row.get('_id') : row._id) + ':' + column.id);
+    }
+    
+    /**
      * Return has previous page
      *
      * @return {boolean}
      */
-    hasPrev () {
+    hasPrev() {
       // return page greater
       return this.grid.state.get('page') > 1;
     }
@@ -117,9 +139,62 @@
      *
      * @return {boolean}
      */
-    hasNext () {
+    hasNext() {
       // return page less
       return this.grid.state.get('page') < (Math.floor(this.grid.state.get('total') / this.grid.state.get('limit')) + 1);
+    }
+    
+    /**
+     * on save
+     *
+     * @param  {Object} row
+     * @param  {Object} column
+     * @param  {*}      value
+     *
+     * @return {*}
+     */
+    async onSave(row, column, value) {
+      // set updates
+      this.grid.include.set('updates', `${(this.grid.get('model') ? row.get('_id') : row._id)}.${column.id}`, value);
+      
+      // log
+      await this.grid.update();
+      
+      // remove state loading
+      this.shouldntUpdate(row, column);
+    }
+    
+    /**
+     * on should update
+     *
+     * @param  {Event} e
+     */
+    onShouldUpdate(e) {
+      // prevent scrolling to top
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // get th
+      const td = jQuery(e.target).is('td') ? jQuery(e.target) : jQuery(e.target).closest('td');
+      
+      // set updating
+      this.__updating.set(td.attr('data-row') + ':' + td.attr('data-column'), true);
+      
+      // update
+      this.update();
+    }
+    
+    /**
+     * on should update
+     *
+     * @param  {Event} e
+     */
+    shouldntUpdate(row, column) {
+      // set updating
+      this.__updating.delete((this.grid.get('model') ? row.get('_id') : row._id) + ':' + column.id);
+      
+      // update
+      this.update();
     }
 
     /**
@@ -127,7 +202,7 @@
      *
      * @param {Event} e
      */
-    onSort (e) {
+    onSort(e) {
       // prevent scrolling to top
       e.preventDefault();
       e.stopPropagation();

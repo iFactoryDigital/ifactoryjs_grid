@@ -24,6 +24,7 @@ class GridHelper extends Helper {
       sort   : {},
       filter : {},
     };
+    this.__include = {};
 
     // bind methods
     this.get = this.get.bind(this);
@@ -33,7 +34,7 @@ class GridHelper extends Helper {
     this.render = this.render.bind(this);
 
     // create normal methods
-    ['id', 'form', 'type', 'limit', 'page', 'model', 'route', 'models'].forEach((method) => {
+    ['id', 'type', 'limit', 'page', 'model', 'route', 'models'].forEach((method) => {
       // do methods
       this[method] = (item) => {
         // set data method
@@ -52,6 +53,15 @@ class GridHelper extends Helper {
       // add sort
       this.state.set('sort.sort', sort);
       this.state.set('sort.way', way);
+
+      // return this
+      return this;
+    };
+
+    // set include
+    this.include = (obj) => {
+      // assign
+      this.__include = Object.assign(this.__include, obj);
 
       // return this
       return this;
@@ -357,7 +367,7 @@ class GridHelper extends Helper {
           if (!this.get('column').get(column) || !this.get('column').get(column).update) return;
 
           // Update
-          await this.get('column').get(column).update(row, state.update[id][column]);
+          await this.get('column').get(column).update.submit(req, row, state.update[id][column]);
         }));
       }));
     }
@@ -372,7 +382,7 @@ class GridHelper extends Helper {
     } = await this.query.execute();
 
     // get model
-    const Model = this.get('model');
+    const FormModel = this.get('model');
 
     // create response object
     const response = {
@@ -416,7 +426,7 @@ class GridHelper extends Helper {
       }),
       data : {
         id      : this.get('id'),
-        model   : this.get('models') ? (new Model()).constructor.name.toLowerCase() : undefined,
+        model   : this.get('models') ? (new FormModel()).constructor.name.toLowerCase() : undefined,
         route   : this.get('route'),
         columns : [],
         filters : [],
@@ -434,7 +444,7 @@ class GridHelper extends Helper {
         width    : value.width || false,
         title    : value.title,
         input    : value.input,
-        update   : !!value.update,
+        update   : (value.update || {}).tag,
         priority : value.priority || 0,
       });
     }
@@ -454,6 +464,12 @@ class GridHelper extends Helper {
     // sort columns/filters
     response.data.columns.sort((a, b) => (b.priority || 0) - (a.priority || 0));
     response.data.filters.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+
+    // add include
+    Object.keys(this.__include).forEach((key) => {
+      // add to include
+      response[key] = this.__include[key];
+    });
 
     // return response
     return response;
