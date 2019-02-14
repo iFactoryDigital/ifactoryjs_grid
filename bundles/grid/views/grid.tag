@@ -159,9 +159,6 @@
     this.limits     = [20, 40, 60, 80, 100];
     this.__updating = new Map();
     
-    // set grid
-    if (this.eden.frontend) window.builtGrid = this.grid;
-    
     /**
      * gets class
      *
@@ -372,7 +369,7 @@
       const td = jQuery(e.target).is('td') ? jQuery(e.target) : jQuery(e.target).closest('td');
       
       // get column
-      const column = this.grid.get(`column.${tr.attr('data-column')}`);
+      const column = this.grid.get(`column.${td.attr('data-column')}`);
       
       // return true
       if (!column.update) return true;
