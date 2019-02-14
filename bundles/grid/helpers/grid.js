@@ -372,6 +372,26 @@ class GridHelper extends Helper {
       }));
     }
 
+    // get grid element
+    const hash = this.get('id') ? this.get('id') : `${req.user ? req.user.get('_id').toString() : req.sessionID}:${this.get('route')}`;
+    const grid = await Grid.findOne({
+      key : hash
+    }) || new Grid({
+      key : hash
+    });
+
+    // check alters
+    if (state.alter) {
+      // set alters
+      grid.set('alter', state.alter);
+
+      // save grid if usr
+      if (req.user) {
+        // save grid
+        await grid.save();
+      }
+    }
+
     // execute query
     const {
       page,
@@ -425,19 +445,20 @@ class GridHelper extends Helper {
         })),
       }),
       data : {
-        id      : this.get('id'),
-        row     : this.get('row'),
-        model   : this.get('models') ? (new FormModel()).constructor.name.toLowerCase() : undefined,
-        route   : this.get('route'),
-        columns : [],
-        filters : [],
+        id     : this.get('id'),
+        row    : this.get('row'),
+        model  : this.get('models') ? (new FormModel()).constructor.name.toLowerCase() : undefined,
+        route  : this.get('route'),
+        column : {},
+        filter : {},
       },
+      alter : grid.get('alter') || {},
     };
 
     // get models
     for (const [key, value] of this.get('column')) {
       // push column
-      response.data.columns.push({
+      response.data.column[key] = {
         id       : key,
         tag      : value.tag,
         sort     : !!value.sort,
@@ -447,24 +468,50 @@ class GridHelper extends Helper {
         input    : value.input,
         update   : (value.update || {}).tag,
         priority : value.priority || 0,
-      });
+      };
     }
 
     // add filters
     for (const [key, value] of this.get('filter')) {
       // push column
-      response.data.filters.push({
+      response.data.filter[key] = {
         id       : key,
         type     : value.type,
         title    : value.title,
         options  : value.options,
         priority : value.priority || 0,
-      });
+      };
     }
 
-    // sort columns/filters
-    response.data.columns.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-    response.data.filters.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    // is object
+    const isObject = (item) => {
+      // returns true if object
+      return (item && typeof item === 'object' && !Array.isArray(item));
+    };
+
+    // merge
+    const mergeDeep = (target, source) => {
+      // check object
+      if (isObject(target) && isObject(source)) {
+        // loop source keys
+        Object.keys(source).forEach((key) => {
+          // check is object
+          if (isObject(source[key])) {
+            // assign empty to target
+            if (!target[key]) Object.assign(target, { [key] : {} });
+
+            // merge deep
+            mergeDeep(target[key], source[key]);
+          } else {
+            // assign shallow
+            Object.assign(target, { [key] : source[key] });
+          }
+        });
+      }
+    };
+
+    // get alters
+    mergeDeep(response, response.alter);
 
     // add include
     Object.keys(this.__include).forEach((key) => {

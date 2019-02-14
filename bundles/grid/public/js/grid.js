@@ -32,6 +32,12 @@ class GridStore extends Events {
     this.__updates = {};
     this.__frontend = !!frontend;
 
+    // set alter
+    if (!this.__alter) {
+      // set grid alteration
+      this.__alter = {};
+    }
+
     // set rows
     this.__rows = this.__state.rows;
 
@@ -39,6 +45,7 @@ class GridStore extends Events {
     this.get = this.get.bind(this);
     this.set = this.set.bind(this);
     this.build = this.build.bind(this);
+    this.update = this.update.bind(this);
 
     // create query
     this.state = {};
@@ -47,6 +54,15 @@ class GridStore extends Events {
     ['Set', 'Get'].forEach((method) => {
       // set in query
       this.state[method.toLowerCase()] = this[`state${method}`].bind(this);
+    });
+
+    // create query
+    this.alter = {};
+
+    // loop query methods
+    ['Set', 'Get'].forEach((method) => {
+      // set in query
+      this.alter[method.toLowerCase()] = this[`alter${method}`].bind(this);
     });
 
     // create query
@@ -218,6 +234,7 @@ class GridStore extends Events {
     // log data
     const res = await fetch(this.get('route'), {
       body : JSON.stringify(Object.assign({}, this.state.get(), {
+        alter  : this.__alter,
         update : this.__updates,
       }, {
         rows  : undefined,
@@ -291,6 +308,53 @@ class GridStore extends Events {
     if (key.includes('.')) {
       // emit parent key
       this.emit(`state.${key.split('.')[0]}`, this.state.get(key.split('.')[0]));
+    }
+
+    // return this
+    return this;
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // Alter methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * get value
+   *
+   * @param  {String}  key
+   * @param  {Boolean} backup
+   *
+   * @return {*}
+   */
+  alterGet(key, backup) {
+    // gets key
+    if (!key) return this.__alter;
+
+    // get key from data
+    return dotProp.get(this.__alter, key) || (backup ? this.get(key) : undefined);
+  }
+
+  /**
+   * get value
+   *
+   * @param  {String} key
+   * @param  {*}      value
+   *
+   * @return {*}
+   */
+  alterSet(key, value) {
+    // get key from data
+    dotProp.set(this.__alter, key, value);
+
+    // emit event
+    this.emit(`alter.${key}`, value);
+
+    // check contains parent key
+    if (key.includes('.')) {
+      // emit parent key
+      this.emit(`alter.${key.split('.')[0]}`, this.alter.get(key.split('.')[0]));
     }
 
     // return this

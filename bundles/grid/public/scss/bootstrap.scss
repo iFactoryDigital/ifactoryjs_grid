@@ -36,4 +36,15 @@ $gray-500: #6d6e70!default;
   .pagination-stats {
     line-height : 32px;
   }
+
+  .no-caret {
+    &:before,
+    &:after {
+      display : none;
+    }
+  }
+
+  .dropdown-grid-settings {
+    width : ($spacer * 16);
+  }
 }
