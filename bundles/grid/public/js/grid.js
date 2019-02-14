@@ -196,14 +196,16 @@ class GridStore extends Events {
     if (this.get('id')) {
       // set query
       query[this.get('id')] = Object.assign({}, this.state.get(), {
-        rows  : undefined,
-        count : undefined,
+        rows   : undefined,
+        count  : undefined,
+        update : undefined,
       });
     } else {
       // get state
       Object.assign(query, this.state.get(), {
-        rows  : undefined,
-        count : undefined,
+        rows   : undefined,
+        count  : undefined,
+        update : undefined,
       });
     }
 
