@@ -375,9 +375,9 @@ class GridHelper extends Helper {
     // get grid element
     const hash = this.get('id') ? this.get('id') : `${req.user ? req.user.get('_id').toString() : req.sessionID}:${this.get('route')}`;
     const grid = await Grid.findOne({
-      key : hash
+      key : hash,
     }) || new Grid({
-      key : hash
+      key : hash,
     });
 
     // check alters
@@ -416,7 +416,7 @@ class GridHelper extends Helper {
           if (this.get('models')) {
             // return sanitised model
             return Object.assign(await row.sanitise(), {
-              _id : row.get('_id').toString()
+              _id : row.get('_id').toString(),
             });
           }
 
