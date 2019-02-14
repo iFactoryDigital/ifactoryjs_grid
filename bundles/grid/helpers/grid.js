@@ -466,6 +466,7 @@ class GridHelper extends Helper {
         width    : value.width || false,
         title    : value.title,
         input    : value.input,
+        hidden   : value.hidden,
         update   : (value.update || {}).tag,
         priority : value.priority || 0,
       };
