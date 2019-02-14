@@ -170,15 +170,21 @@
      * @param  {Event} e
      */
     onShouldUpdate(e) {
+      // get th
+      const td = jQuery(e.target).is('td') ? jQuery(e.target) : jQuery(e.target).closest('td');
+      
+      // get column
+      const column = this.grid.get('columns').find((col) => col.id === td.attr('data-column'));
+      
+      // return true
+      if (!column.update) return true;
+      
       // prevent scrolling to top
       e.preventDefault();
       e.stopPropagation();
       
-      // get th
-      const td = jQuery(e.target).is('td') ? jQuery(e.target) : jQuery(e.target).closest('td');
-      
       // set updating
-      this.__updating.set(td.attr('data-row') + ':' + td.attr('data-column'), true);
+      this.__updating.set(td.attr('data-row') + ':' + column.id, true);
       
       // update
       this.update();
