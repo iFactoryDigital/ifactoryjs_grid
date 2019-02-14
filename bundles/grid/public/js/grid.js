@@ -214,6 +214,7 @@ class GridStore extends Events {
       query[this.get('id')] = Object.assign({}, this.state.get(), {
         rows   : undefined,
         count  : undefined,
+        alter  : undefined,
         update : undefined,
       });
     } else {
@@ -221,6 +222,7 @@ class GridStore extends Events {
       Object.assign(query, this.state.get(), {
         rows   : undefined,
         count  : undefined,
+        alter  : undefined,
         update : undefined,
       });
     }
