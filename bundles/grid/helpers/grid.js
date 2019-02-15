@@ -90,7 +90,8 @@ class GridHelper extends Helper {
 
         // set in map
         this.__data[method].set(key, Object.assign(item, {
-          id : key,
+          id       : key,
+          priority : item.priority || (100 - this.get('column').size)
         }));
 
         // return this
@@ -574,6 +575,7 @@ class GridHelper extends Helper {
       response.data.column[key] = {
         id       : key,
         hidden   : value.hidden,
+        export   : value.export,
         priority : value.priority || 0,
       };
     }

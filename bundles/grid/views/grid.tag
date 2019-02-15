@@ -190,7 +190,7 @@
      */
     getVisibleColumns() {
       // return visible column
-      return Object.values(this.grid.get('column')).filter((col) => !col.hidden).sort((a, b) => parseInt(b.priority || 0) - parseInt(a.priority || 0));
+      return Object.values(this.grid.get('column')).filter((col) => !col.hidden && col.title).sort((a, b) => parseInt(b.priority || 0) - parseInt(a.priority || 0));
     }
 
     /**
@@ -200,7 +200,7 @@
      */
     getAllColumns() {
       // return visible column
-      return Object.values(this.grid.get('column')).sort((a, b) => parseInt(b.priority || 0) - parseInt(a.priority || 0));
+      return Object.values(this.grid.get('column')).filter((col) => col.title).sort((a, b) => parseInt(b.priority || 0) - parseInt(a.priority || 0));
     }
 
     /**
