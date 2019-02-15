@@ -582,7 +582,7 @@ class GridHelper extends Helper {
     this.__merge(response, response.alter);
 
     // get ordered columns
-    const orderedColumns = Object.values(response.data.column).sort((a, b) => parseInt(b.priority || 0, 10) - parseInt(a.priority || 0, 10)).filter(col => col.hidden !== true).map((col) => {
+    const orderedColumns = Object.values(response.data.column).sort((a, b) => parseInt(b.priority || 0, 10) - parseInt(a.priority || 0, 10)).filter(col => col.hidden !== true && col.export !== false).map((col) => {
       // return got column
       return this.get('column').get(col.id);
     }).filter(col => col);
