@@ -9,37 +9,47 @@
       </div>
     </div>
     <!-- / filters -->
-    
+
     <!-- settings -->
     <div class="grid-settings">
       <div class="row row-eq-height mb-3">
         <div class="col-md-6 d-flex align-items-center">
           <div class="w-100">
             <yield from="settings-left" />
-            
+
+            <div class="dropright d-inline-block">
+              <button class="btn btn-secondary no-caret dropdown-toggle" type="button" id="{ this.uuid }-export" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa fa-download" />
+              </button>
+              <div class="dropdown-menu dropdown-menu-right dropdown-grid-export" aria-labelledby="{ this.uuid }-export">
+                <button each={ type, i in this.exports } class={ 'dropdown-item' : true, 'active' : type === this.exporting } onclick={ onExport }>
+                  { type }
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="col-md-6 d-flex align-items-center">
           <div class="w-100 text-md-right">
             <yield from="settings-right" />
-            
+
             <div class="dropdown d-inline-block mr-2">
-              <button class="btn btn-secondary dropdown-toggle" type="button" id="{ this.uuid }-limit" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Showing: { this.grid.state.get('limit') }
+              <button class="btn btn-secondary dropdown-toggle { 'disabled' : grid.isLoading() }" disabled={ grid.isLoading() } type="button" id="{ this.uuid }-limit" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Showing: { grid.state.get('limit') }
               </button>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="{ this.uuid }-limit">
-                <a href="#" each={ limit, i in this.limits } class={ 'dropdown-item' : true, 'active' : limit === this.grid.state.get('limit') } onclick={ onLimit }>
+                <button each={ limit, i in this.limits } class={ 'dropdown-item' : true, 'active' : limit === grid.state.get('limit') } onclick={ onLimit }>
                   { limit }
-                </a>
+                </button>
               </div>
             </div>
-            
-            <button class="btn btn-secondary mr-2 { 'disabled' : this.grid.isLoading() }" disabled={ grid.isLoading() } onclick={ grid.update }>
-              <i class="fa fa-sync { 'fa-spin' : this.grid.isLoading() }" />
+
+            <button class="btn btn-secondary mr-2 { 'disabled' : grid.isLoading() }" disabled={ grid.isLoading() } onclick={ grid.update }>
+              <i class="fa fa-sync { 'fa-spin' : grid.isLoading() }" />
             </button>
-            
+
             <div class="dropleft d-inline-block">
-              <button class="btn btn-secondary no-caret dropdown-toggle" type="button" id="{ this.uuid }-settings" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <button class="btn btn-secondary no-caret dropdown-toggle { 'disabled' : grid.isLoading() }" disabled={ grid.isLoading() } type="button" id="{ this.uuid }-settings" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-cog" />
               </button>
               <div class="dropdown-menu dropdown-menu-right dropdown-grid-settings" aria-labelledby="{ this.uuid }-settings">
@@ -64,7 +74,7 @@
       </div>
     </div>
     <!-- / settings -->
-    
+
     <!-- body -->
     <div class="grid-body">
       <div if={ grid.get('row') } class={ getClass('rows', 'grid-rows') }>
@@ -85,10 +95,10 @@
           <tr each={ row, i in grid.rows() } no-reorder>
             <td each={ column, a in getVisibleColumns() } data-row={ grid.get('model') ? row.get('_id') : row._id } data-column={ column.id } onclick={ onShouldUpdate } class={ 'grid-update' : column.update, 'grid-updating' : isUpdating(row, column) } no-reorder>
               <div if={ isUpdating(row, column) } data-is={ column.update } on-save={ onSave } column={ column } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id) : row[column.id] } />
-            
+
               <div if={ column.tag && !isUpdating(row, column) } class="d-inline-block" data-is={ column.tag } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id) : row[column.id] } />
               <raw if={ !column.tag && !isUpdating(row, column) } data={ { 'html' : grid.get('model') ? row.get(column.id) : row[column.id] } } />
-              
+
               <span if={ column.update && !isUpdating(row, column) } class="grid-update-item float-right">
                 <i class="fa fa-ellipsis-h" />
               </span>
@@ -98,7 +108,7 @@
       </table>
     </div>
     <!-- / body -->
-    
+
     <!-- pagination -->
     <div class="grid-pagination">
       <div class="row">
@@ -150,15 +160,16 @@
     this.mixin('i18n');
     this.mixin('grid');
     this.mixin('model');
-    
+
     // require uuid
     const uuid = require('uuid');
-    
+
     // set updating
     this.uuid       = uuid();
     this.limits     = [20, 40, 60, 80, 100];
+    this.exports    = ['CSV', 'XLSX'];
     this.__updating = new Map();
-    
+
     /**
      * gets class
      *
@@ -171,7 +182,7 @@
       // return opts or default
       return opts[`${type}Class`] || d;
     }
-    
+
     /**
      * gets visible column
      *
@@ -181,7 +192,7 @@
       // return visible column
       return Object.values(this.grid.get('column')).filter((col) => !col.hidden).sort((a, b) => parseInt(b.priority || 0) - parseInt(a.priority || 0));
     }
-    
+
     /**
      * gets all column
      *
@@ -191,7 +202,7 @@
       // return visible column
       return Object.values(this.grid.get('column')).sort((a, b) => parseInt(b.priority || 0) - parseInt(a.priority || 0));
     }
-    
+
     /**
      * gets visible column
      *
@@ -201,7 +212,7 @@
       // return visible column
       return Object.values(this.grid.get('filter')).filter((col) => !col.hidden).sort((a, b) => parseInt(b.priority || 0) - parseInt(a.priority || 0));
     }
-    
+
     /**
      * gets all column
      *
@@ -221,7 +232,7 @@
       // Return boolean
       return !!(this.grid.state.get('sort.sort') === column.id);
     }
-    
+
     /**
      * returns is loading
      *
@@ -234,7 +245,7 @@
       // return has
       return this.__updating.has((this.grid.get('model') ? row.get('_id') : row._id) + ':' + column.id);
     }
-    
+
     /**
      * Return has previous page
      *
@@ -266,7 +277,7 @@
       this.dragula = dragula([this.refs.reorder]).on('drop', (el, target, source, sibling) => {
         // child nodes total
         const total = this.refs.reorder.childNodes.length;
-        
+
         // get order
         this.refs.reorder.childNodes.forEach((child, i) => {
           // check get attribute
@@ -274,17 +285,17 @@
 
           // get column
           const id = child.getAttribute('data-column');
-          
+
           // find column
           this.grid.alter.set(`data.column.${id}.priority`, total - i);
         });
-        
+
         // set alter
         Object.values(this.grid.get('column')).forEach((col) => {
           // set priority
           col.priority = this.grid.alter.get(`data.column.${col.id}.priority`);
         });
-        
+
         // update grid
         this.grid.update();
       });
@@ -295,7 +306,7 @@
         this.dragula.containers = [this.refs.reorder];
       });
     }
-    
+
     /**
      * on hide column
      *
@@ -307,19 +318,19 @@
       // prevent scrolling to top
       e.preventDefault();
       e.stopPropagation();
-      
+
       // toggle column hidden
       e.item.column.hidden = !e.item.column.hidden;
-      
+
       // set in grid
       this.grid.alter.set(`data.column.${e.item.column.id}`, {
         hidden : e.item.column.hidden
       });
-      
+
       // update grid
       this.grid.update();
     }
-    
+
     /**
      * on limit
      *
@@ -331,14 +342,42 @@
       // prevent scrolling to top
       e.preventDefault();
       e.stopPropagation();
-      
+
       // set limit
-      this.grid.state.set('limit', e.item.limit);    
-      
+      this.grid.state.set('limit', e.item.limit);
+
       // log
-      this.grid.update();  
+      this.grid.update();
     }
-    
+
+    /**
+     * on limit
+     *
+     * @param  {Event} e
+     *
+     * @return {*}
+     */
+    async onExport(e) {
+      // prevent scrolling to top
+      e.preventDefault();
+      e.stopPropagation();
+
+      // set loading
+      this.exporting = e.item.type;
+
+      // update
+      this.update();
+
+      // export
+      await this.grid.export(this.exporting);
+
+      // set loading
+      this.exporting = null;
+
+      // log
+      this.update();
+    }
+
     /**
      * on save
      *
@@ -351,14 +390,14 @@
     async onSave(row, column, value) {
       // set updates
       this.grid.include.set('updates', `${(this.grid.get('model') ? row.get('_id') : row._id)}.${column.id}`, value);
-      
+
       // log
       await this.grid.update();
-      
+
       // remove state loading
       this.shouldntUpdate(row, column);
     }
-    
+
     /**
      * on should update
      *
@@ -367,24 +406,24 @@
     onShouldUpdate(e) {
       // get th
       const td = jQuery(e.target).is('td') ? jQuery(e.target) : jQuery(e.target).closest('td');
-      
+
       // get column
       const column = this.grid.get(`column.${td.attr('data-column')}`);
-      
+
       // return true
       if (!column.update) return true;
-      
+
       // prevent scrolling to top
       e.preventDefault();
       e.stopPropagation();
-      
+
       // set updating
       this.__updating.set(td.attr('data-row') + ':' + column.id, true);
-      
+
       // update
       this.update();
     }
-    
+
     /**
      * on should update
      *
@@ -393,7 +432,7 @@
     shouldntUpdate(row, column) {
       // set updating
       this.__updating.delete((this.grid.get('model') ? row.get('_id') : row._id) + ':' + column.id);
-      
+
       // update
       this.update();
     }
@@ -420,15 +459,15 @@
         // set sort
         sort.way = -1;
       }
-      
+
       // set sort
       sort.sort = column.id;
-      
+
       // sort grid
       this.grid.set('sort', sort);
       this.grid.update();
     }
-    
+
     /**
      * on filter function
      *
@@ -518,17 +557,17 @@
       // update view
       this.grid.update();
     }
-    
+
     /**
      * on mount function
      */
     this.on('mount', () => {
       // check frontend
       if (!this.eden.frontend) return;
-      
+
       // init dragula
       this.initDragula();
     });
-    
+
   </script>
 </grid>

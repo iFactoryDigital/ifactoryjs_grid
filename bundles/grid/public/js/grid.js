@@ -39,7 +39,7 @@ class GridStore extends Events {
     }
 
     // set rows
-    this.__rows = this.__state.rows;
+    this.__rows = (this.__state || {}).rows;
 
     // bind methods
     this.get = this.get.bind(this);
@@ -261,6 +261,40 @@ class GridStore extends Events {
       // set value
       this[`__${key}`] = data[key];
     });
+
+    // set loading
+    this.__loading = false;
+
+    // emit update
+    this.emit('update');
+  }
+
+  /**
+   * updates grid
+   *
+   * @param  {Object}
+   *
+   * @return {Promise}
+   */
+  async export(type) {
+    // set loading
+    this.__loading = true;
+
+    // emit update
+    this.emit('update');
+
+    // get query string
+    const qs = require('qs');
+
+    // do request
+    eden.router.go(`//${eden.config.domain}${this.get('route')}?${qs.stringify(Object.assign({}, this.state.get(), {
+      alter  : this.__alter,
+      export : type,
+      update : this.__updates,
+    }, {
+      rows  : undefined,
+      count : undefined,
+    }))}`);
 
     // set loading
     this.__loading = false;

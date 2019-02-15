@@ -1,6 +1,11 @@
 // Require local class dependencies
-const Helper  = require('helper');
-const dotProp = require('dot-prop');
+const xl       = require('excel4node');
+const uuid     = require('uuid');
+const Helper   = require('helper');
+const moment   = require('moment');
+const dotProp  = require('dot-prop');
+const json2csv = require('json2csv');
+
 
 // require models
 const Grid = model('grid');
@@ -33,8 +38,13 @@ class GridHelper extends Helper {
     this.build = this.build.bind(this);
     this.render = this.render.bind(this);
 
+    // bind export methods
+    this._export = this._export.bind(this);
+    this._exportCSV = this._exportCSV.bind(this);
+    this._exportXLSX = this._exportXLSX.bind(this);
+
     // create normal methods
-    ['id', 'row', 'limit', 'page', 'model', 'route', 'models'].forEach((method) => {
+    ['id', 'row', 'limit', 'page', 'model', 'route', 'models', 'export'].forEach((method) => {
       // do methods
       this[method] = (item) => {
         // set data method
@@ -78,7 +88,9 @@ class GridHelper extends Helper {
         }
 
         // set in map
-        this.__data[method].set(key, item);
+        this.__data[method].set(key, Object.assign(item, {
+          id : key,
+        }));
 
         // return this
         return this;
@@ -484,35 +496,8 @@ class GridHelper extends Helper {
       };
     }
 
-    // is object
-    const isObject = (item) => {
-      // returns true if object
-      return (item && typeof item === 'object' && !Array.isArray(item));
-    };
-
-    // merge
-    const mergeDeep = (target, source) => {
-      // check object
-      if (isObject(target) && isObject(source)) {
-        // loop source keys
-        Object.keys(source).forEach((key) => {
-          // check is object
-          if (isObject(source[key])) {
-            // assign empty to target
-            if (!target[key]) Object.assign(target, { [key] : {} });
-
-            // merge deep
-            mergeDeep(target[key], source[key]);
-          } else {
-            // assign shallow
-            Object.assign(target, { [key] : source[key] });
-          }
-        });
-      }
-    };
-
     // get alters
-    mergeDeep(response, response.alter);
+    this.__merge(response, response.alter);
 
     // add include
     Object.keys(this.__include).forEach((key) => {
@@ -524,7 +509,6 @@ class GridHelper extends Helper {
     return response;
   }
 
-
   /**
    * Runs post request
    *
@@ -532,8 +516,253 @@ class GridHelper extends Helper {
    * @param {Response} res
    */
   async post(req, res) {
+    // check export
+    if (req.query.export) {
+      // export
+      return this._export(req, res, req.query.export.toLowerCase());
+    }
+
     // return json
     res.json(await this.render(req, res));
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // Export methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
+
+
+  /**
+   * export action
+   *
+   * @param  {Request}  req
+   * @param  {Response} res
+   * @param  {String}   type
+   *
+   * @return {*}
+   */
+  async _export(req, res, type) {
+    // create state
+    const state = { ...(req.query || {}), ...(req.body || {}) };
+
+    // get grid element
+    const hash = this.get('id') ? this.get('id') : `${req.user ? req.user.get('_id').toString() : req.sessionID}:${this.get('route')}`;
+    const grid = await Grid.findOne({
+      key : hash,
+    }) || new Grid({
+      key : hash,
+    });
+
+    // await filter and sort
+    await this.query.filter();
+    await this.query.sort();
+
+    // setup faux response
+    const response = {
+      data : {
+        column : {},
+      },
+      alter : grid.get('alter') || {},
+    };
+
+    // get models
+    for (const [key, value] of this.get('column')) {
+      // push column
+      response.data.column[key] = {
+        id       : key,
+        hidden   : value.hidden,
+        priority : value.priority || 0,
+      };
+    }
+
+    // get alters
+    this.__merge(response, response.alter);
+
+    // get ordered columns
+    const orderedColumns = Object.values(response.data.column).sort((a, b) => parseInt(b.priority || 0, 10) - parseInt(a.priority || 0, 10)).filter(col => col.hidden !== true).map((col) => {
+      // return got column
+      return this.get('column').get(col.id);
+    }).filter(col => col);
+
+    // set rows
+    const rows = await Promise.all((await this.__query.find()).map(async (row) => {
+      // sanitise row
+      if (this.get('models')) {
+        // return sanitised model
+        return Object.assign(await row.sanitise(), {
+          _id : row.get('_id').toString(),
+        });
+      }
+
+      // set result
+      const result = {
+        _id : row.get('_id').toString(),
+      };
+
+      // loop columns
+      for (const column of orderedColumns) {
+        // get column
+        let element = await row.get(column.id);
+
+        // check format
+        if (column.export) {
+          // set element
+          element = await column.export(element, row);
+        } else if (column.format) {
+          // set element
+          element = await column.format(element, row);
+        }
+
+        // return element
+        result[column.title] = (element || '').toString();
+      }
+
+      // return done row
+      return result;
+    }));
+
+    // locals
+    if (this.get(`export.${type}`)) {
+      // add export
+      return await this.get(`export.${type}`)(req, res, rows);
+    }
+
+    // do actual export
+    if (type === 'csv') return this._exportCSV(req, res, rows);
+    if (type === 'xlsx') return this._exportXLSX(req, res, rows);
+
+    // return json
+    return res.json(await this.render(req, res));
+  }
+
+  /**
+   * Export CSV
+   *
+   * @param {Request}  req
+   * @param {Response} res
+   * @param {Array}    rows
+   */
+  async _exportCSV(req, res, rows) {
+    // create parser
+    const Json2csvParser = json2csv.Parser;
+    const fields = Object.keys(rows[0]);
+
+    // create new parser
+    const json2csvParser = new Json2csvParser({
+      fields
+    });
+    const csv = json2csvParser.parse(rows);
+
+    // get model
+    const FormModel = this.get('model');
+
+    // download csv
+    res.set('Content-Type', 'text/csv');
+    res.set('Content-Disposition', `attachment; filename=${this.get('id') || (new FormModel()).constructor.name}-${moment().format('DD-MM-YYYY')}.csv`);
+    res.status(200);
+
+    // send response
+    res.end(csv);
+  }
+
+  /**
+   * Export XLSX
+   *
+   * @param {Request}  req
+   * @param {Response} res
+   * @param {Array}    rows
+   */
+  async _exportXLSX(req, res, rows) {
+    // get model
+    const FormModel = this.get('model');
+
+    // create workbook
+    const wb = new xl.Workbook();
+    const ws = wb.addWorksheet(`${this.get('id') || (new FormModel()).constructor.name}-${moment().format('DD-MM-YYYY')}.csv`);
+    const fields = Object.keys(rows[0]);
+
+    // add titles
+    fields.forEach((title, i) => {
+      ws.cell(1, (i + 1))
+        .string(title);
+    });
+
+    // loop rows
+    rows.forEach((row, i) => {
+      // values
+      Object.values(row).forEach((col, x) => {
+        // create worksheet cell
+        ws.cell((i + 2), (x + 1))
+          .string(col);
+      });
+    });
+
+    // set uuid
+    const UUID = uuid();
+
+    // write to temp
+    await new Promise((resolve, reject) => {
+      // write
+      wb.write(`/tmp/${UUID}.xlsx`, (err) => {
+        // check for error
+        if (err) return reject(err);
+
+        // resolve
+        resolve();
+      });
+    });
+
+    // download XLSX
+    res.set('Content-Disposition', `attachment; filename=${this.get('id') || (new FormModel()).constructor.name}-${moment().format('DD-MM-YYYY')}.xlsx`);
+    res.download(`/tmp/${UUID}.xlsx`);
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  //
+  // MISC methods
+  //
+  // ////////////////////////////////////////////////////////////////////////////
+
+
+  /**
+   * merge deep
+   *
+   * @param  {Object} target
+   * @param  {Object} source
+   *
+   * @return {Object}
+   */
+  __merge(target, source) {
+    // check object
+    if (this.__object(target) && this.__object(source)) {
+      // loop source keys
+      Object.keys(source).forEach((key) => {
+        // check is object
+        if (this.__object(source[key])) {
+          // assign empty to target
+          if (!target[key]) Object.assign(target, { [key] : {} });
+
+          // merge deep
+          this.__merge(target[key], source[key]);
+        } else {
+          // assign shallow
+          Object.assign(target, { [key] : source[key] });
+        }
+      });
+    }
+  }
+
+  /**
+   * returns true if object is object
+   *
+   * @param  {*} item
+   *
+   * @return {Boolean}
+   */
+  __object(item) {
+    // returns true if object
+    return (item && typeof item === 'object' && !Array.isArray(item));
   }
 }
 
