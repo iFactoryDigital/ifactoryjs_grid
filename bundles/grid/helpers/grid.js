@@ -3,6 +3,7 @@ const xl       = require('excel4node');
 const uuid     = require('uuid');
 const Helper   = require('helper');
 const moment   = require('moment');
+const toText   = require('html-to-text');
 const dotProp  = require('dot-prop');
 const json2csv = require('json2csv');
 
@@ -614,6 +615,9 @@ class GridHelper extends Helper {
           // set element
           element = await column.format(element, row);
         }
+
+        // remove html
+        element = toText.fromString(element);
 
         // return element
         result[column.title] = (element || '').toString();

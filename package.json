@@ -4,6 +4,7 @@
   "version": "1.0.9",
   "dependencies": {
     "excel4node": "^1.7.0",
+    "html-to-text": "^4.0.0",
     "json2csv": "^4.3.4"
   },
   "engines": {
