@@ -11,7 +11,7 @@
     <!-- / filters -->
 
     <!-- settings -->
-    <div class="grid-settings">
+    <div class="grid-settings" if={ grid.get('bar') }>
       <div class="row row-eq-height mb-3">
         <div class="col-md-6 d-flex align-items-center">
           <div class="w-100">

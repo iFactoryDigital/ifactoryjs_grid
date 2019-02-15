@@ -44,7 +44,7 @@ class GridHelper extends Helper {
     this._exportXLSX = this._exportXLSX.bind(this);
 
     // create normal methods
-    ['id', 'row', 'limit', 'page', 'model', 'route', 'models', 'export'].forEach((method) => {
+    ['id', 'row', 'bar', 'limit', 'page', 'model', 'route', 'models', 'export'].forEach((method) => {
       // do methods
       this[method] = (item) => {
         // set data method
@@ -458,6 +458,7 @@ class GridHelper extends Helper {
       }),
       data : {
         id     : this.get('id'),
+        bar    : this.get('bar') !== false,
         row    : this.get('row'),
         model  : this.get('models') ? (new FormModel()).constructor.name.toLowerCase() : undefined,
         route  : this.get('route'),
