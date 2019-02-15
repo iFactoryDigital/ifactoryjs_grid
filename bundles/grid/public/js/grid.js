@@ -113,6 +113,9 @@ class GridStore extends Events {
           // Return model
           return model;
         });
+      } else {
+        // se trows
+        this.__rows = this.state.get('rows');
       }
 
       // emit update
