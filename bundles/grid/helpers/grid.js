@@ -91,7 +91,7 @@ class GridHelper extends Helper {
         // set in map
         this.__data[method].set(key, Object.assign(item, {
           id       : key,
-          priority : item.priority || (100 - this.get('column').size)
+          priority : item.priority || (100 - (this.get(method) || new Map()).size)
         }));
 
         // return this
