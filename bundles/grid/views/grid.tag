@@ -1,9 +1,9 @@
 <grid>
   <div class={ 'grid' : true, 'loading' : grid.isLoading() }>
     <!-- filters -->
-    <div class="grid-filters">
+    <div class={ getClass('filters', 'grid-filters') }>
       <div class="row" if={ getVisibleFilters().length }>
-        <div class="col-md-3 filter form-group" each={ filter, i in getVisibleFilters() }>
+        <div class="col-md-3 filter" each={ filter, i in getVisibleFilters() }>
           <div data-is="grid-filter-{ filter.type || 'text' }" filter={ filter } data-value={ grid.state.get('filter.' + filter.id) } grid={ grid } on-filter={ onFilter } />
         </div>
       </div>
@@ -11,8 +11,8 @@
     <!-- / filters -->
 
     <!-- settings -->
-    <div class="grid-settings" if={ grid.get('bar') }>
-      <div class="row row-eq-height mb-3">
+    <div class={ getClass('settings', 'grid-settings mb-3') } if={ grid.get('bar') }>
+      <div class="row row-eq-height">
         <div class="col-md-6 d-flex align-items-center">
           <div class="w-100">
             <yield from="settings-left" />
@@ -76,7 +76,7 @@
     <!-- / settings -->
 
     <!-- body -->
-    <div class="grid-body">
+    <div class={ getClass('body', 'grid-body') }>
       <div if={ grid.get('row') } class={ getClass('rows', 'grid-rows') }>
         <div data-is={ grid.get('row') } each={ row, i in grid.rows() } row={ row } grid={ grid } />
       </div>
@@ -110,45 +110,35 @@
     <!-- / body -->
 
     <!-- pagination -->
-    <div class="grid-pagination">
+    <div class={ getClass('pagination', 'grid-pagination') }>
       <div class="row">
-        <div class="col-sm-6">
-          <small class="pagination-stats text-muted">
-            { this.t('Showing') } { (grid.state.get('page') - 1) * grid.state.get('limit') } - { (grid.state.get('page') * grid.state.get('limit')) > grid.state.get('total') ? grid.state.get('total') : (grid.state.get('page') * grid.state.get('limit')) } { this.t('of') } { grid.state.get('total') }
+        <div class="col-sm-6 d-flex align-items-center">
+          <small class="pagination-stats text-muted w-100">
+            { this.t('Showing') } { (grid.state.get('page') - 1) * grid.state.get('limit') } - { (grid.state.get('page') * grid.state.get('limit')) > grid.state.get('count') ? grid.state.get('count') : (grid.state.get('page') * grid.state.get('limit')) } { this.t('of') } { grid.state.get('count') }
           </small>
         </div>
-        <div class="col-sm-6">
-          <nav aria-label="Page navigation" class="float-sm-right">
-            <ul class="pagination pagination-sm">
-              <li class={ 'page-item' : true, 'disabled' : !hasPrev() }>
-                <a class="page-link" href="#!" aria-label={ this.t('First') } onclick={ onFirst }>
+        <div class="col-sm-6 d-flex align-items-center">
+          <div class="w-100">
+            <nav aria-label="Page navigation" class="float-sm-right">
+              <div class="btn-group">
+                <a class={ 'btn' : true, 'btn-secondary disabled' : !hasPrev(), 'btn-primary' : hasPrev() } href="#!" aria-label={ this.t('First') } onclick={ onFirst }>
                   { this.t('First') }
                 </a>
-              </li>
-
-              <li class={ 'page-item' : true, 'disabled' : !hasPrev() }>
-                <a class="page-link" href="#!" aria-label={ this.t('Previous') } onclick={ onPrev }>
+                <a class={ 'btn' : true, 'btn-secondary disabled' : !hasPrev(), 'btn-primary' : hasPrev() } href="#!" aria-label={ this.t('Previous') } onclick={ onPrev }>
                   { this.t('Previous') }
                 </a>
-              </li>
-
-              <li each={ p, i in this.pages } class={ 'page-item' : true, 'active' : grid.state.get('page') === p }>
-                <a class="page-link" href="#!" data-page={ p } onclick={ onPage }>{ p }</a>
-              </li>
-
-              <li class={ 'page-item' : true, 'disabled' : !hasNext() }>
-                <a class="page-link" href="#!" aria-label={ this.t ('Next') } onclick={ onNext }>
+                <a each={ p, i in this.pages } class={ 'btn btn-primary' : true, 'active' : grid.state.get('page') === p } href="#!" data-page={ p } onclick={ onPage }>
+                  { p }
+                </a>
+                <a class={ 'btn' : true, 'btn-secondary disabled' : !hasNext(), 'btn-primary' : hasNext() } href="#!" aria-label={ this.t ('Next') } onclick={ onNext }>
                   { this.t('Next') }
                 </a>
-              </li>
-
-              <li class={ 'page-item' : true, 'disabled' : !hasNext() }>
-                <a class="page-link" href="#!" aria-label={ this.t ('Last') } onclick={ onLast }>
+                <a class={ 'btn' : true, 'btn-secondary disabled' : !hasNext(), 'btn-primary' : hasNext() } href="#!" aria-label={ this.t ('Last') } onclick={ onLast }>
                   { this.t('Last') }
                 </a>
-              </li>
-            </ul>
-          </nav>
+              </div>
+            </nav>
+          </div>
         </div>
       </div>
     </div>
