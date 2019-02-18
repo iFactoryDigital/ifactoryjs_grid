@@ -91,7 +91,7 @@ class GridHelper extends Helper {
         // set in map
         this.__data[method].set(key, Object.assign(item, {
           id       : key,
-          priority : item.priority || (100 - (this.get(method) || new Map()).size)
+          priority : item.priority || (100 - (this.get(method) || new Map()).size),
         }));
 
         // return this
@@ -587,7 +587,8 @@ class GridHelper extends Helper {
     const orderedColumns = Object.values(response.data.column).sort((a, b) => parseInt(b.priority || 0, 10) - parseInt(a.priority || 0, 10)).filter(col => col.hidden !== true && col.export !== false).map((col) => {
       // return got column
       return this.get('column').get(col.id);
-    }).filter(col => col);
+    })
+      .filter(col => col);
 
     // set rows
     const rows = await Promise.all((await this.__query.find()).map(async (row) => {
@@ -657,7 +658,7 @@ class GridHelper extends Helper {
 
     // create new parser
     const json2csvParser = new Json2csvParser({
-      fields
+      fields,
     });
     const csv = json2csvParser.parse(rows);
 

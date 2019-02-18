@@ -120,7 +120,7 @@
         <div class="col-sm-6 d-flex align-items-center">
           <div class="w-100">
             <nav aria-label="Page navigation" class="float-sm-right">
-              <div class="btn-group">
+              <div class="btn-group btn-group-sm">
                 <a class={ 'btn' : true, 'btn-secondary disabled' : !hasPrev(), 'btn-primary' : hasPrev() } href="#!" aria-label={ this.t('First') } onclick={ onFirst }>
                   { this.t('First') }
                 </a>
