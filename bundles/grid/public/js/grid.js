@@ -465,6 +465,41 @@ class GridStore extends Events {
   }
 
   /**
+   * returns array of pages
+   *
+   * @return {Array}
+   */
+  pages() {
+    // reset pages
+    const pages = [];
+
+    // set start
+    let page  = (this.state.get('page') - 5) < 1 ? 1 : (this.state.get('page') - 5);
+    const main = page;
+    let start = ((page - 1) * this.state.get('rows'));
+
+    // while start less than pages
+    while (start < this.state.get('count')) {
+      // add to pages
+      pages.push(page);
+
+      // add to page
+      page += 1;
+
+      // set start value
+      start = ((page - 1) * this.state.get('rows'));
+
+      // check if should stop
+      if (main - page > 8 || pages.length > 9) {
+        break;
+      }
+    }
+
+    // return pages
+    return pages;
+  }
+
+  /**
    * emits update
    */
   __update() {

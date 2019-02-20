@@ -127,7 +127,7 @@
                 <a class={ 'btn' : true, 'btn-secondary disabled' : !hasPrev(), 'btn-primary' : hasPrev() } href="#!" aria-label={ this.t('Previous') } onclick={ onPrev }>
                   { this.t('Previous') }
                 </a>
-                <a each={ p, i in this.pages } class={ 'btn btn-primary' : true, 'active' : grid.state.get('page') === p } href="#!" data-page={ p } onclick={ onPage }>
+                <a each={ p, i in grid.pages() } class={ 'btn btn-primary' : true, 'active' : grid.state.get('page') === p } href="#!" data-page={ p } onclick={ onPage }>
                   { p }
                 </a>
                 <a class={ 'btn' : true, 'btn-secondary disabled' : !hasNext(), 'btn-primary' : hasNext() } href="#!" aria-label={ this.t ('Next') } onclick={ onNext }>
@@ -253,7 +253,7 @@
      */
     hasNext() {
       // return page less
-      return this.grid.state.get('page') < (Math.floor(this.grid.state.get('total') / this.grid.state.get('limit')) + 1);
+      return this.grid.state.get('page') < (Math.floor(this.grid.state.get('count') / this.grid.state.get('limit')) + 1);
     }
 
     /**
@@ -497,7 +497,7 @@
       e.stopPropagation();
 
       // get page
-      this.grid.state.set('page', Math.floor(this.grid.state.get('total') / this.grid.state.get('limit')) + 1);
+      this.grid.state.set('page', Math.floor(this.grid.state.get('count') / this.grid.state.get('limit')) + 1);
 
       // update view
       this.grid.update();
