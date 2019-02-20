@@ -94,10 +94,10 @@
         <tbody>
           <tr each={ row, i in grid.rows() } no-reorder>
             <td each={ column, a in getVisibleColumns() } data-row={ grid.get('model') ? row.get('_id') : row._id } data-column={ column.id } onclick={ onShouldUpdate } class={ 'grid-update' : column.update, 'grid-updating' : isUpdating(row, column) } no-reorder>
-              <div if={ isUpdating(row, column) } data-is={ column.update } on-save={ onSave } column={ column } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id) : row[column.id] } />
+              <div if={ isUpdating(row, column) } data-is={ column.update } on-save={ onSave } column={ column } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id.split('__').join('.')) : row[column.id.split('__').join('.')] } />
 
-              <div if={ column.tag && !isUpdating(row, column) } class="d-inline-block" data-is={ column.tag } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id) : row[column.id] } />
-              <raw if={ !column.tag && !isUpdating(row, column) } data={ { 'html' : grid.get('model') ? row.get(column.id) : row[column.id] } } />
+              <div if={ column.tag && !isUpdating(row, column) } class="d-inline-block" data-is={ column.tag } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id.split('__').join('.')) : row[column.id.split('__').join('.')] } />
+              <raw if={ !column.tag && !isUpdating(row, column) } data={ { 'html' : grid.get('model') ? row.get(column.id.split('__').join('.')) : row[column.id.split('__').join('.')] } } />
 
               <span if={ column.update && !isUpdating(row, column) } class="grid-update-item float-right">
                 <i class="fa fa-ellipsis-h" />

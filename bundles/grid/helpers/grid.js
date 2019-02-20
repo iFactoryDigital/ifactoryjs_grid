@@ -261,9 +261,12 @@ class GridHelper extends Helper {
     }
 
     // loop while
-    for (const [key, value] of this.__data.filter) {
+    for (let [key, value] of this.__data.filter) {
       // check value
       if (!value) continue;
+
+      // set key
+      key = key.split('__').join('.');
 
       // do filter
       if (!this.state.get(`filter.${key}`)) continue;
@@ -293,7 +296,7 @@ class GridHelper extends Helper {
 
     // loop while
     const way = this.state.get('sort.way') === 'false' || this.state.get('sort').way === false ? false : parseInt((this.state.get('sort.way', true) || -1), 10);
-    const sort = this.state.get('sort.sort', true) ? this.state.get('sort.sort', true) : false;
+    const sort = (this.state.get('sort.sort', true) ? this.state.get('sort.sort', true) : false).split('__').join('.');
 
     // set sort
     if (sort && way !== false) {
@@ -377,6 +380,9 @@ class GridHelper extends Helper {
 
         // Loop columns
         await Promise.all(Object.keys(state.update[id]).map(async (column) => {
+          // set column
+          column = column.split('__').join('.');
+
           // Check columns
           if (!this.get('column').get(column) || !this.get('column').get(column).update) return;
 
@@ -471,7 +477,10 @@ class GridHelper extends Helper {
     };
 
     // get models
-    for (const [key, value] of this.get('column')) {
+    for (let [key, value] of this.get('column')) {
+      // set key
+      key = key.split('.').join('__');
+
       // push column
       response.data.column[key] = {
         id       : key,
@@ -488,7 +497,10 @@ class GridHelper extends Helper {
     }
 
     // add filters
-    for (const [key, value] of this.get('filter')) {
+    for (let [key, value] of this.get('filter')) {
+      // set key
+      key = key.split('.').join('__');
+
       // push column
       response.data.filter[key] = {
         id       : key,
