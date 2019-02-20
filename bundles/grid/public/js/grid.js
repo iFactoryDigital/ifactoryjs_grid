@@ -44,6 +44,7 @@ class GridStore extends Events {
     // bind methods
     this.get = this.get.bind(this);
     this.set = this.set.bind(this);
+    this.pages = this.pages.bind(this);
     this.build = this.build.bind(this);
     this.update = this.update.bind(this);
 
@@ -474,9 +475,9 @@ class GridStore extends Events {
     const pages = [];
 
     // set start
-    let page  = (this.state.get('page') - 5) < 1 ? 1 : (this.state.get('page') - 5);
+    let page = (this.state.get('page') - 5) < 1 ? 1 : (this.state.get('page') - 5);
+    let start = ((page - 1) * this.state.get('limit'));
     const main = page;
-    let start = ((page - 1) * this.state.get('rows'));
 
     // while start less than pages
     while (start < this.state.get('count')) {
@@ -487,7 +488,7 @@ class GridStore extends Events {
       page += 1;
 
       // set start value
-      start = ((page - 1) * this.state.get('rows'));
+      start = ((page - 1) * this.state.get('limit'));
 
       // check if should stop
       if (main - page > 8 || pages.length > 9) {
