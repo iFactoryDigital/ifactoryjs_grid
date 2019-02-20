@@ -1,7 +1,7 @@
 {
   "name": "@edenjs/grid",
   "description": "",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "dependencies": {
     "excel4node": "^1.7.0",
     "html-to-text": "^4.0.0",
