@@ -561,6 +561,9 @@ class GridHelper extends Helper {
     // create state
     const state = { ...(req.query || {}), ...(req.body || {}) };
 
+    // set state
+    Object.keys(state).forEach(key => this.state.set(key, state[key]));
+
     // get grid element
     const hash = this.get('id') ? this.get('id') : `${req.user ? req.user.get('_id').toString() : req.sessionID}:${this.get('route')}`;
     const grid = await Grid.findOne({
