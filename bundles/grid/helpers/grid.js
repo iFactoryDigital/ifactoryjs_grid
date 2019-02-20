@@ -296,7 +296,7 @@ class GridHelper extends Helper {
 
     // loop while
     const way = this.state.get('sort.way') === 'false' || this.state.get('sort').way === false ? false : parseInt((this.state.get('sort.way', true) || -1), 10);
-    const sort = (this.state.get('sort.sort', true) ? this.state.get('sort.sort', true) : false).split('__').join('.');
+    const sort = this.state.get('sort.sort', true) ? this.state.get('sort.sort', true).split('__').join('.') : false;
 
     // set sort
     if (sort && way !== false) {
