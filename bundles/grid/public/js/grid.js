@@ -139,8 +139,6 @@ class GridStore extends Events {
    * @return {*}
    */
   destroy() {
-    console.log('destroy');
-    
     // remove update listener
     this.__rows.forEach((row) => {
       // remove listener
