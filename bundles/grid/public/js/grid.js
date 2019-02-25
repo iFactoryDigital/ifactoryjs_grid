@@ -23,6 +23,9 @@ class GridStore extends Events {
     // run super
     super();
 
+    // set max listeners
+    this.setMaxListeners(0);
+
     // set variables
     Object.keys(grid).forEach((val) => {
       // set value
@@ -128,6 +131,21 @@ class GridStore extends Events {
 
     // on state rows
     this.on('state.rows', setModels);
+  }
+
+  /**
+   * destroy grid
+   *
+   * @return {*}
+   */
+  destroy() {
+    console.log('destroy');
+    
+    // remove update listener
+    this.__rows.forEach((row) => {
+      // remove listener
+      if (row.removeListener) row.removeListener('update', this.__update);
+    });
   }
 
   // ////////////////////////////////////////////////////////////////////////////
