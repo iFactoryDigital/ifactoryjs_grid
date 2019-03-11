@@ -457,7 +457,7 @@ class GridHelper extends Helper {
             if (value.format) element = await value.format(element, row);
 
             // return element
-            result[key] = (element || '').toString();
+            result[key] = (element || '');
           }
 
           // return done row
@@ -638,7 +638,7 @@ class GridHelper extends Helper {
         element = toText.fromString(element);
 
         // return element
-        result[column.title] = (element || '').toString();
+        result[column.title] = (element || '');
       }
 
       // return done row
