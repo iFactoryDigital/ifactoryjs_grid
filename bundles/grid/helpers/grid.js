@@ -266,7 +266,7 @@ class GridHelper extends Helper {
       if (!value) continue;
 
       // set key
-      key = key.split('__').join('.');
+      key = key.split('.').join('__');
 
       // do filter
       if (!this.state.get(`filter.${key}`)) continue;
