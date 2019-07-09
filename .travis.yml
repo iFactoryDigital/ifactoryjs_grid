@@ -1,0 +1,21 @@
+language: node_js
+node_js:
+- '10'
+sudo: false
+install:
+- npm install --only=dev
+- npm ci
+before_script:
+- node node_modules/eslint/bin/eslint.js .
+script:
+- node ./edenconfig.js
+after_script:
+- npm test
+deploy:
+  provider: npm
+  email: alex@edenup.com
+  api_key:
+    secure: oo2DRleVDMpJM4MZStIIBvAAlL0tUKxzxYlgj7Lie+WScdKUtYw2lfBq9S3bIAtlx4JPRcNkFu7Tnj8vTQEs9VZ3gJIUKS9o3ZNMv5+Cm3/lb/S90GnlHyU+C6ohHf/ZZn1CTL/KQxO5GEA7ueHJXVq76yqF+bRK02JVICVr2Plx/61wYWqKOsBUOiiSIIsYGwFLBd7FOUhcGDo63tV9rTtUMs13tb2noycacS9kHh/1ICZB24RTV4SwGFRyMAuSbnNWakfWfD3uUoSbkm9rATRvLfr0zRh+jQzj3h8foDRJBZVojPoHN+mNyB0n6uTzF5GuTdE/I/Vpyz6JEXSNeEaf6qWsu6onHIIsHZer8qEGoF5fF6BvFjwvFHT3GzAjjtDOBLeghaPWOwB8mLtyMKE6fuY15XLE7gshcWxHetFO1mjtj+yYdpV8xHvVW5NF5lxLMVeGxUepk5Oc+TkSeeU/Uc3egaAx7XYKamTkBL5slfaDWvwHsEMUu3ux1+iUTU0tG4t6K1PQQMw2Dl3dfp5usXt816Azv5H3MWeN2xPli8HS74kf10RYusTqKqplKSD9v0badCAaQXaltuZma2KFbqJZzUzOy11le59GnNRDn6DbvNZeSSnhFPxa7QYMNS9U/y/XCLJDnEHoxfiXj6VQA6PIu3mgzbpIZdJ7fnE=
+  on:
+    tags: true
+    repo: eden-js/grid
