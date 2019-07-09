@@ -7,14 +7,6 @@ const Model = require('model');
  */
 class Grid extends Model {
   /**
-   * construct placement model
-   */
-  constructor() {
-    // run super
-    super(...arguments);
-  }
-
-  /**
    * sanitises placement
    *
    * @return {Promise}
@@ -31,4 +23,4 @@ class Grid extends Model {
  * export user class
  * @type {user}
  */
-exports = module.exports = Grid;
+module.exports = Grid;

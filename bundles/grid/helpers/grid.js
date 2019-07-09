@@ -143,6 +143,7 @@ class GridHelper extends Helper {
         // Create new function
         this[method] = (...args) => {
           // Set where
+          // eslint-disable-next-line no-return-assign
           return this.__query = this.__query[method](...args);
         };
       });
@@ -261,6 +262,7 @@ class GridHelper extends Helper {
     }
 
     // loop while
+    // eslint-disable-next-line prefer-const
     for (let [key, value] of this.__data.filter) {
       // check value
       if (!value) continue;
@@ -477,6 +479,7 @@ class GridHelper extends Helper {
     };
 
     // get models
+    // eslint-disable-next-line prefer-const
     for (let [key, value] of this.get('column')) {
       // set key
       key = key.split('.').join('__');
@@ -497,6 +500,7 @@ class GridHelper extends Helper {
     }
 
     // add filters
+    // eslint-disable-next-line prefer-const
     for (let [key, value] of this.get('filter')) {
       // set key
       key = key.split('.').join('__');
@@ -538,7 +542,7 @@ class GridHelper extends Helper {
     }
 
     // return json
-    res.json(await this.render(req, res));
+    return res.json(await this.render(req, res));
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -599,6 +603,7 @@ class GridHelper extends Helper {
     this.__merge(response, response.alter);
 
     // get ordered columns
+    // eslint-disable-next-line max-len
     const orderedColumns = Object.values(response.data.column).sort((a, b) => parseInt(b.priority || 0, 10) - parseInt(a.priority || 0, 10)).filter(col => col.hidden !== true && col.export !== false).map((col) => {
       // return got column
       return this.get('column').get(col.id);
@@ -732,7 +737,7 @@ class GridHelper extends Helper {
         if (err) return reject(err);
 
         // resolve
-        resolve();
+        return resolve();
       });
     });
 
@@ -794,4 +799,4 @@ class GridHelper extends Helper {
  *
  * @type {GridHelper}
  */
-exports = module.exports = GridHelper;
+module.exports = GridHelper;

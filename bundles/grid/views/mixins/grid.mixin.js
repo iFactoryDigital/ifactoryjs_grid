@@ -6,6 +6,7 @@ riot.mixin('grid', {
    */
   init() {
     // set this store
+    // eslint-disable-next-line global-require
     const Grid = require('grid/public/js/grid');
 
     // on update

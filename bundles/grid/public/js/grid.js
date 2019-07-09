@@ -1,7 +1,7 @@
 
 // require event emitter
-const qs = require('qs');
-const Events = require('events');
+const qs      = require('qs');
+const Events  = require('events');
 const dotProp = require('dot-prop');
 
 // Require live model
@@ -303,9 +303,6 @@ class GridStore extends Events {
     // emit update
     this.emit('update');
 
-    // get query string
-    const qs = require('qs');
-
     // do request
     eden.router.go(`//${eden.config.domain}${this.get('route')}?${qs.stringify(Object.assign({}, this.state.get(), {
       alter  : this.__alter,
@@ -526,4 +523,4 @@ class GridStore extends Events {
 }
 
 // create grid store
-exports = module.exports = GridStore;
+module.exports = GridStore;

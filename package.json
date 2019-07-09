@@ -5,7 +5,8 @@
   "dependencies": {
     "excel4node": "^1.7.0",
     "html-to-text": "^4.0.0",
-    "json2csv": "^4.3.4"
+    "json2csv": "^4.3.4",
+    "uuid": "^3.3.2"
   },
   "engines": {
     "node": ">= 8.0.0"

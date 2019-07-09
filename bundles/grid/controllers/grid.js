@@ -7,13 +7,6 @@ const Controller = require('controller');
  * Build Grid Controller
  */
 class GridController extends Controller {
-  /**
-   * Construct example controller class
-   */
-  constructor() {
-    // Run super
-    super();
-  }
 }
 
 /**
@@ -21,4 +14,4 @@ class GridController extends Controller {
  *
  * @type {GridController}
  */
-exports = module.exports = GridController;
+module.exports = GridController;
