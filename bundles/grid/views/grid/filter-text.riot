@@ -1,0 +1,38 @@
+<grid-filter-text>
+  <div class="form-group">
+    <label if={ props.filter.title }>
+      { props.filter.title }
+    </label>
+
+    <input class={ classes({ 'form-control' : true }) } type="text" value={ filterValue() } onchange={ (e) => onFilter(e) } required />
+  </div>
+  <script>
+    // import dependencies
+    import Base from '../js/base';
+
+    // export default
+    export default class GridFilterText extends Base {
+      /**
+       * Returns filter value
+       *
+       * @param  {object} filter
+       *
+       * @return {string}
+       */
+      filterValue() {
+        // Return filter value
+        return this.props.dataValue || '';
+      }
+
+      /**
+      * On filter function
+      *
+      * @param {Event} e
+      */
+      onFilter(e) {
+        // Send to opts
+        if (this.props.onFilter) this.props.onFilter(this.props.filter, e.target.value);
+      }
+    }
+  </script>
+</grid-filter-text>
