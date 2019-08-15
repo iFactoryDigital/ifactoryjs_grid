@@ -45,6 +45,11 @@ $gray-500: #6d6e70!default;
   }
 
   .dropdown-grid-settings {
-    width : ($spacer * 16);
+    width    : ($spacer * 16);
+    overflow : auto;
+
+    .list-group {
+      max-height : 80vh;
+    }
   }
 }
