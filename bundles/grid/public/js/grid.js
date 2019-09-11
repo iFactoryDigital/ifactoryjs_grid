@@ -109,7 +109,7 @@ class GridStore extends Events {
         // set rows
         this.__rows = this.state.get('rows').map((row) => {
           // create model
-          const model = this.__frontend ? eden.model.get(this.get('model'), row._id, row) : new EdenModel(this.get('model'), row._id, row);
+          const model = this.__frontend ? eden.model.add(this.get('model'), row._id, row) : new EdenModel(this.get('model'), row._id, row);
 
           // emit update
           model.on('update', this.__update);
