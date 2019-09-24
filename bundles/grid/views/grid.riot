@@ -121,19 +121,19 @@
           <div class="w-100">
             <nav aria-label="Page navigation" class="float-sm-right">
               <div class="btn-group btn-group-sm">
-                <a class={ classes({ 'btn' : true, 'btn-secondary disabled' : !hasPrev(), 'btn-primary' : hasPrev() }) } href="#!" aria-label={ eden.get('i18n.t')('First') } onclick={ onFirst }>
+                <a class={ classes({ 'btn' : true, 'btn-secondary disabled' : !hasPrev(), 'btn-primary' : hasPrev() }) } href="#!" aria-label={ eden.get('i18n.t')('First') } onclick={ (e) => onFirst(e) }>
                   { eden.get('i18n.t')('First') }
                 </a>
-                <a class={ classes({ 'btn' : true, 'btn-secondary disabled' : !hasPrev(), 'btn-primary' : hasPrev() }) } href="#!" aria-label={ eden.get('i18n.t')('Previous') } onclick={ onPrev }>
+                <a class={ classes({ 'btn' : true, 'btn-secondary disabled' : !hasPrev(), 'btn-primary' : hasPrev() }) } href="#!" aria-label={ eden.get('i18n.t')('Previous') } onclick={ (e) => onPrev(e) }>
                   { eden.get('i18n.t')('Previous') }
                 </a>
-                <a each={ (p, i) in grid.pages() } class={ classes({ 'btn btn-primary' : true, 'active' : grid.state.get('page') === p }) } href="#!" data-page={ p } onclick={ onPage }>
+                <a each={ (p, i) in grid.pages() } class={ classes({ 'btn btn-primary' : true, 'active' : grid.state.get('page') === p }) } href="#!" data-page={ p } onclick={ (e) => onPage(e, p) }>
                   { p }
                 </a>
-                <a class={ classes({ 'btn' : true, 'btn-secondary disabled' : !hasNext(), 'btn-primary' : hasNext() }) } href="#!" aria-label={ eden.get('i18n.t')('Next') } onclick={ onNext }>
+                <a class={ classes({ 'btn' : true, 'btn-secondary disabled' : !hasNext(), 'btn-primary' : hasNext() }) } href="#!" aria-label={ eden.get('i18n.t')('Next') } onclick={ (e) => onNext(e) }>
                   { eden.get('i18n.t')('Next') }
                 </a>
-                <a class={ classes({ 'btn' : true, 'btn-secondary disabled' : !hasNext(), 'btn-primary' : hasNext() }) } href="#!" aria-label={ eden.get('i18n.t')('Last') } onclick={ onLast }>
+                <a class={ classes({ 'btn' : true, 'btn-secondary disabled' : !hasNext(), 'btn-primary' : hasNext() }) } href="#!" aria-label={ eden.get('i18n.t')('Last') } onclick={ (e) => onLast(e) }>
                   { eden.get('i18n.t')('Last') }
                 </a>
               </div>
@@ -523,13 +523,13 @@
        *
        * @param  {Event} e
        */
-      onPage(e) {
+      onPage(e, page) {
         // prevent scrolling to top
         e.preventDefault();
         e.stopPropagation();
 
         // get page
-        this.grid.state.set('page', e.target.dataset.page);
+        this.grid.state.set('page', page);
 
         // update view
         this.grid.update();
