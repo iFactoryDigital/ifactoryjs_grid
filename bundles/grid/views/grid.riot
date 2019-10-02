@@ -78,7 +78,7 @@
     <!-- body -->
     <div class={ getClass('body', 'grid-body') }>
       <div if={ grid.get('row') } class={ getClass('rows', 'grid-rows') }>
-        <div data-is={ grid.get('row') } each={ (row, i) in grid.rows() } row={ row } grid={ grid } />
+        <div is={ grid.get('row') } each={ (row, i) in grid.rows() } row={ row } grid={ grid } />
       </div>
       <table if={ !grid.get('row') } class={ getClass('table', 'table table-striped') }>
         <thead>
@@ -94,9 +94,9 @@
         <tbody>
           <tr each={ (row, i) in grid.rows() } no-reorder>
             <td each={ (column, a) in getVisibleColumns() } data-row={ grid.get('model') ? row.get('_id') : row._id } data-column={ column.id } onclick={ column.update ? onShouldUpdate : null } class={ `${column.update ? 'grid-update' : ''} ${classes({ 'grid-updating' : isUpdating(row, column) })}` }>
-              <div if={ isUpdating(row, column) } data-is={ column.update } on-save={ onSave } column={ column } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id.split('__').join('.')) : row[column.id.split('__').join('.')] } />
+              <div if={ isUpdating(row, column) } is={ column.update } on-save={ onSave } column={ column } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id.split('__').join('.')) : row[column.id.split('__').join('.')] } />
 
-              <div if={ column.tag && !isUpdating(row, column) } class="d-inline-block" data-is={ column.tag } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id.split('__').join('.')) : row[column.id.split('__').join('.')] } />
+              <div if={ column.tag && !isUpdating(row, column) } class="d-inline-block" is={ column.tag } row={ row } column={ column } data-value={ grid.get('model') ? row.get(column.id.split('__').join('.')) : row[column.id.split('__').join('.')] } />
               <raw if={ !column.tag && !isUpdating(row, column) } data={ { 'html' : grid.get('model') ? row.get(column.id.split('__').join('.')) : row[column.id.split('__').join('.')] } } />
 
               <span if={ column.update && !isUpdating(row, column) } class="grid-update-item float-right">
