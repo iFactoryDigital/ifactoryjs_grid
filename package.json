@@ -1,5 +1,5 @@
 {
-  "name": "@edenjs/grid",
+  "name": "@ifactoryjs/grid",
   "description": "",
   "version": "1.1.4",
   "dependencies": {
@@ -17,14 +17,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eden-js/grid.git"
+    "url": "git+https://github.com/ifactorydigital/ifactoryjs_grid.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/eden-js/grid/issues"
+    "url": "https://github.com/ifactorydigital/ifactoryjs_grid/issues"
   },
-  "homepage": "https://github.com/eden-js/grid#readme",
+  "homepage": "https://github.com/ifactorydigital/ifactoryjs_grid#readme",
   "devDependencies": {
     "eslint": "^5.13.0",
     "@edenjs/eslint-config-eden": "^2.0.14",
