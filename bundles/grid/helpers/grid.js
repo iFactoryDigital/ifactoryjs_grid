@@ -6,10 +6,13 @@ const moment   = require('moment');
 const toText   = require('html-to-text');
 const dotProp  = require('dot-prop');
 const json2csv = require('json2csv');
-
+const fs       = require('fs');
+const config   = require('config');
+const conversion    = require("phantom-html-to-pdf")();
 
 // require models
 const Grid = model('grid');
+const File = model('file');
 
 /**
  * Create Grid Helper class
@@ -42,6 +45,7 @@ class GridHelper extends Helper {
     // bind export methods
     this._export = this._export.bind(this);
     this._exportCSV = this._exportCSV.bind(this);
+    this._exportPDF = this._exportPDF.bind(this);
     this._exportXLSX = this._exportXLSX.bind(this);
 
     // create normal methods
@@ -658,6 +662,7 @@ class GridHelper extends Helper {
 
     // do actual export
     if (type === 'csv') return this._exportCSV(req, res, rows);
+    if (type === 'pdf') return this._exportPDF(req, res, rows);
     if (type === 'xlsx') return this._exportXLSX(req, res, rows);
 
     // return json
@@ -692,6 +697,30 @@ class GridHelper extends Helper {
 
     // send response
     res.end(csv);
+  }
+
+  /**
+   * Export PDF
+   *
+   * @param {Request}  req
+   * @param {Response} res
+   * @param {Array}    rows
+   */
+  async _exportPDF(req, res, rows) {
+    const file = new File();
+    file.set('ext', 'pdf');
+    // add hook to create pdf
+    await this.eden.hook('grid.export.pdf', {
+      req,
+      rows,
+      file,
+    });
+
+    await file.fromHtmlStringToPdf(req.pdfhtml, req.filename);
+    await file.save();
+
+    res.set('Content-Disposition', `attachment; filename=${filename}.pdf`);
+    res.download(`//${config.get('domain')}${file.url()}`);
   }
 
   /**
