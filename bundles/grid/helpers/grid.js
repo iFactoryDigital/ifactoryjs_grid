@@ -6,9 +6,7 @@ const moment   = require('moment');
 const toText   = require('html-to-text');
 const dotProp  = require('dot-prop');
 const json2csv = require('json2csv');
-const fs       = require('fs');
 const config   = require('config');
-const conversion    = require("phantom-html-to-pdf")();
 
 // require models
 const Grid = model('grid');
