@@ -512,6 +512,8 @@ class GridHelper extends Helper {
         id       : key,
         type     : value.type,
         title    : value.title,
+        selected : value.selected || '',
+        interval : value.interval || '',
         options  : value.options,
         priority : value.priority || 0,
       };
@@ -705,10 +707,13 @@ class GridHelper extends Helper {
    * @param {Array}    rows
    */
   async _exportPDF(req, res, rows) {
+    // get model
+    const FormModel = this.get('model');
     const file = new File();
     file.set('ext', 'pdf');
+
     // add hook to create pdf
-    await this.eden.hook('grid.export.pdf', {
+    await this.eden.hook('grid.export.before.pdf', {
       req,
       rows,
       file,
@@ -717,8 +722,19 @@ class GridHelper extends Helper {
     await file.fromHtmlStringToPdf(req.pdfhtml, req.filename);
     await file.save();
 
-    res.set('Content-Disposition', `attachment; filename=${filename}.pdf`);
-    res.download(`//${config.get('domain')}${file.url()}`);
+    // add hook to after create pdf
+    await this.eden.hook('grid.export.after.pdf', {
+      req,
+      rows,
+      file,
+    });
+
+    if (!req.nodownload) {
+      res.set('Content-Disposition', `attachment; filename=${(new FormModel()).constructor.name}-${moment().format('DD-MM-YYYY')}.pdf`);
+      res.download(`${global.appRoot}/data/www/${file.url()}`);
+    } else {
+      res.redirect(req.redirect);
+    }
   }
 
   /**

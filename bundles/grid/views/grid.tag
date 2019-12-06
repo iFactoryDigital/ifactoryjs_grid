@@ -1,5 +1,5 @@
 <grid>
-  <div class={ 'grid' : true, 'loading' : grid.isLoading() }>
+  <div class={ 'grid' : true, 'loading' : grid.isLoading(), 'aaa' : true }>
     <!-- filters -->
     <div class={ getClass('filters', 'grid-filters') }>
       <div class="row" if={ getVisibleFilters().length }>
