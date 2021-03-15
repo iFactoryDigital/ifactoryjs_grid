@@ -248,10 +248,12 @@ class GridStore extends Events {
     }
 
     // replace history
+    /*
     eden.router.history.replace({
       state,
       pathname : `${eden.router.history.location.pathname.split('?')[0]}?${qs.stringify(query)}`,
     });
+    */
 
     // log data
     const res = await fetch(this.get('route'), {
